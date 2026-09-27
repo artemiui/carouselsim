@@ -1110,6 +1110,14 @@ def main():
           <button class="square-btn yellow" onclick="runDirectSimulation()" data-tooltip-title="Run Simulation Engine" data-tooltip="Execute real-time SimPy discrete-event simulation across the 24-station corridor.">
             Run Simulation
           </button>
+          <button class="square-btn" id="btn-export-telemetry" onclick="exportSimulationData()" data-tooltip-title="Export Telemetry Data" data-tooltip="Export comprehensive simulation time-slices, station queues, delays, and telemetry logs in JSON format for extended analysis.">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export Data
+          </button>
         </div>
       </header>
 
@@ -1208,7 +1216,7 @@ def main():
               <div class="card-header-title has-var-tooltip" data-tooltip-title="Corridor Stations" data-tooltip="24 calibrated stations along EDSA featuring accurate coordinates and berth capacities.">
                 Corridor Checkpoints
               </div>
-              <div class="card-header-sub" id="dir-sub-title">24 Stations: Monumento → PITX</div>
+              <div class="card-header-sub" id="dir-sub-title">Route Orientation: Monumento → PITX</div>
             </div>
 
             <!-- Direction Toggle Switcher -->
@@ -1241,12 +1249,12 @@ def main():
               <span id="chip-queue-info" style="color:var(--signage-green);">Nominal flow</span>
             </div>
 
-            <!-- Dual-View Switcher: Concentric Rings vs Route Map -->
+            <!-- Dual-View Switcher: Concentric Rings vs Route Map (Route Map Default) -->
             <div class="square-toggle-group">
-              <button class="square-toggle-btn active" id="btn-view-circle" onclick="setVisualMode('circle')" data-tooltip-title="Concentric Circles View" data-tooltip="Inner (NB ↺) & outer (SB ↻) concentric circles with equal-distance station nodes and circulating bus nodes.">
+              <button class="square-toggle-btn" id="btn-view-circle" onclick="setVisualMode('circle')" data-tooltip-title="Concentric Circles View" data-tooltip="Inner (NB ↺) & outer (SB ↻) concentric circles with equal-distance station nodes and circulating bus nodes.">
                 Concentric Rings
               </button>
-              <button class="square-toggle-btn" id="btn-view-route" onclick="setVisualMode('route')" data-tooltip-title="Route Map View" data-tooltip="Calibrated EDSA corridor path matching the official transit alignment from the attachment.">
+              <button class="square-toggle-btn active" id="btn-view-route" onclick="setVisualMode('route')" data-tooltip-title="Route Map View" data-tooltip="Calibrated EDSA corridor path matching the official transit alignment from the attachment.">
                 Route Map
               </button>
             </div>
@@ -1296,7 +1304,7 @@ def main():
             </div>
 
             <!-- 1. Dual Concentric Circles (Circular Carousel View) -->
-            <svg id="circle-canvas-svg" width="100%" height="330" viewBox="0 0 540 330">
+            <svg id="circle-canvas-svg" width="100%" height="330" viewBox="0 0 540 330" style="display:none;">
               <!-- Radial spoke connecting lines between inner and outer rings -->
               <g id="circle-spokes-layer"></g>
 
@@ -1334,8 +1342,8 @@ def main():
               <g id="circle-labels-layer"></g>
             </svg>
 
-            <!-- 2. Fixed Geographic Route Map (Matching Attachment) -->
-            <svg id="route-vector-svg" width="100%" height="330" viewBox="0 0 540 330" style="display:none;">
+            <!-- 2. Fixed Geographic Route Map (Matching Attachment - Default View) -->
+            <svg id="route-vector-svg" width="100%" height="330" viewBox="0 0 540 330">
               <!-- Background Road Guidelines -->
               <line x1="20" y1="50" x2="520" y2="50" stroke="#EDE8DC" stroke-width="1.5"/>
               <line x1="20" y1="120" x2="520" y2="120" stroke="#EDE8DC" stroke-width="1.5"/>
@@ -1404,7 +1412,7 @@ def main():
   <!-- Simplified Full-Fill Footer (Edge to Edge) -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <span class="footer-name">Artemio Arcega</span>
+      <span class="footer-name">A Project by Artemio Arcega</span>
       <div class="footer-links">
         <a href="https://artemiui.vercel.app" target="_blank" rel="noopener noreferrer" class="footer-icon-link" title="Portfolio (artemiui.vercel.app)" aria-label="Portfolio">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1498,7 +1506,7 @@ def main():
     let playSpeed = 1;
     let progressTimer = null;
     let currentDirection = 'southbound';
-    let currentVisualMode = 'circle';
+    let currentVisualMode = 'route';
 
     // Camera state for Zoom & Pan on SVG Maps
     const mapCameras = {{
@@ -1604,10 +1612,10 @@ def main():
       const subTitle = document.getElementById('dir-sub-title');
       const durPill = document.getElementById('route-duration-pill');
       if (dir === 'southbound') {{
-        subTitle.innerText = "24 Stations: Monumento → PITX";
+        subTitle.innerText = "Route Orientation: Monumento → PITX";
         durPill.innerText = "Southbound Cycle: ~1h 35m";
       }} else {{
-        subTitle.innerText = "24 Stations: PITX → Monumento";
+        subTitle.innerText = "Route Orientation: PITX → Monumento";
         durPill.innerText = "Northbound Cycle: ~1h 35m";
       }}
       initChecklist();
@@ -1724,7 +1732,7 @@ def main():
         const seqNum = String(displaySeq + 1).padStart(2, '0');
         
         html += `
-          <div class="station-row" id="chk-item-${{stIdx}}" onclick="highlightStationDot(${{stIdx}})" data-tooltip-title="${{st.name}}" data-tooltip="Station Code: ${{st.code}} | Platform: ${{st.platform}} | Capacity: ${{st.berths}} Berths">
+          <div class="station-row" id="chk-item-${{stIdx}}" onclick="highlightStationDot(${{stIdx}})" data-tooltip-title="${{st.name}}" data-tooltip="Platform: ${{st.platform}} | Capacity: ${{st.berths}} Berths">
             <div class="station-left">
               <div class="signage-badge ${{badgeClass}}">${{seqNum}}</div>
               <div class="signage-icon-box ${{iconClass}}">
@@ -1737,7 +1745,6 @@ def main():
               <div>
                 <div style="display:flex; align-items:center; gap:6px;">
                   <span class="st-name">${{st.name}}</span>
-                  <span class="station-code-pill">${{st.code}}</span>
                 </div>
                 <div class="st-sub" id="chk-sub-${{stIdx}}">${{st.berths}} Berths | ${{st.platform}}</div>
               </div>
@@ -1780,7 +1787,7 @@ def main():
       const rogueTag = stData.has_rogue_bus ? '<br><span style="color:#EA580C; font-weight:700;">[Rogue Bus Lingering]</span>' : '';
 
       tip.innerHTML = `
-        <div style="color:#FFCC00; font-weight:800; font-size:0.78rem;">${{st.code}} • ${{st.name}}</div>
+        <div style="color:#FFCC00; font-weight:800; font-size:0.78rem;">${{st.name}}</div>
         Type: ${{st.platform}} (${{st.berths}} berths)<br>
         SB Waiting: ${{stData.pax_q_forward || 0}} | NB Waiting: ${{stData.pax_q_reverse || 0}}<br>
         Buses Queued: ${{stData.buses_queuing || 0}} (${{stData.avg_delay_min || 0}}m delay)
@@ -2458,6 +2465,124 @@ def main():
 
       // Initialize camera view
       applyCamera();
+    }}
+
+    // Export Full Telemetric Dataset for Extended Transit & Circulation Analysis
+    function exportSimulationData() {{
+      const totalSnaps = snapshots ? snapshots.length : 0;
+      let maxPaxWaiting = 0;
+      let maxPaxTime = '';
+      let maxBusesQueuing = 0;
+      let maxBusesTime = '';
+      let maxStationDelay = 0;
+      let maxDelayStation = '';
+      let maxDelayTime = '';
+
+      // Compute aggregate station statistics
+      const stationStats = {{}};
+      stationDefs.forEach(s => {{
+        stationStats[s.name] = {{
+          name: s.name,
+          platform: s.platform,
+          berths: s.berths,
+          is_terminal: !!s.is_terminal,
+          is_hotspot: !!s.is_hotspot,
+          peak_pax_queue: 0,
+          peak_buses_queuing: 0,
+          peak_delay_min: 0,
+          rogue_lingering_incidents: 0,
+          sum_pax_queue: 0,
+          samples: 0
+        }};
+      }});
+
+      if (snapshots) {{
+        snapshots.forEach(sn => {{
+          if (sn.total_pax_waiting > maxPaxWaiting) {{
+            maxPaxWaiting = sn.total_pax_waiting;
+            maxPaxTime = sn.time_str;
+          }}
+          if (sn.total_buses_queuing > maxBusesQueuing) {{
+            maxBusesQueuing = sn.total_buses_queuing;
+            maxBusesTime = sn.time_str;
+          }}
+          if (sn.stations) {{
+            Object.keys(sn.stations).forEach(stName => {{
+              const stSnap = sn.stations[stName];
+              const stat = stationStats[stName];
+              if (stat) {{
+                stat.samples++;
+                stat.sum_pax_queue += (stSnap.pax_q_total || 0);
+                if ((stSnap.pax_q_total || 0) > stat.peak_pax_queue) {{
+                  stat.peak_pax_queue = stSnap.pax_q_total;
+                }}
+                if ((stSnap.buses_queuing || 0) > stat.peak_buses_queuing) {{
+                  stat.peak_buses_queuing = stSnap.buses_queuing;
+                }}
+                if ((stSnap.avg_delay_min || 0) > stat.peak_delay_min) {{
+                  stat.peak_delay_min = stSnap.avg_delay_min;
+                }}
+                if (stSnap.has_rogue_bus) {{
+                  stat.rogue_lingering_incidents++;
+                }}
+              }}
+              if ((stSnap.avg_delay_min || 0) > maxStationDelay) {{
+                maxStationDelay = stSnap.avg_delay_min;
+                maxDelayStation = stName;
+                maxDelayTime = sn.time_str;
+              }}
+            }});
+          }}
+        }});
+      }}
+
+      // Calculate averages
+      Object.values(stationStats).forEach(stat => {{
+        stat.avg_pax_queue = stat.samples > 0 ? Math.round((stat.sum_pax_queue / stat.samples) * 10) / 10 : 0;
+        delete stat.sum_pax_queue;
+      }});
+
+      const exportPayload = {{
+        system: "EDSA Busway Bus Rapid Transit System Simulation",
+        generator: "EDSA CarouselSim Multi-Berth Circulation Engine",
+        export_timestamp_iso: new Date().toISOString(),
+        simulation_configuration: {{
+          active_preset: activePreset,
+          observation_window: metadata?.label || 'Custom Window',
+          start_hour: metadata?.start_hour ?? 8.0,
+          end_hour: metadata?.end_hour ?? 11.0,
+          active_fleet_buses: metadata?.fleet ?? 100,
+          dispatch_headway_seconds: metadata?.headway ?? 120,
+          bus_rated_capacity_pax: metadata?.capacity ?? 60,
+          rogue_lingering_probability: metadata?.rogue_prob ?? 0.10
+        }},
+        corridor_telemetry_summary: {{
+          total_stations: stationDefs.length,
+          total_observation_slices: totalSnaps,
+          peak_corridor_waiting_pax: maxPaxWaiting,
+          peak_pax_timestamp: maxPaxTime,
+          peak_buses_queuing: maxBusesQueuing,
+          peak_buses_timestamp: maxBusesTime,
+          max_station_delay_min: maxStationDelay,
+          max_delayed_station: maxDelayStation,
+          max_delay_timestamp: maxDelayTime
+        }},
+        stations_summary: Object.values(stationStats),
+        telemetry_snapshots: snapshots
+      }};
+
+      const jsonStr = JSON.stringify(exportPayload, null, 2);
+      const blob = new Blob([jsonStr], {{ type: 'application/json' }});
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      const safePreset = (activePreset || 'telemetry').replace(/[^a-z0-9_-]/gi, '_');
+      const timeTag = new Date().toISOString().replace(/[:.]/g, '-');
+      downloadLink.download = `edsa_carousel_telemetry_${{safePreset}}_${{timeTag}}.json`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(url);
     }}
 
     // Initial load
