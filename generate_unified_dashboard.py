@@ -923,11 +923,31 @@ def main():
       flex-wrap: wrap;
       gap: 16px;
     }}
+    .footer-brand {{
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }}
     .footer-name {{
       font-size: 1.05rem;
       font-weight: 800;
       letter-spacing: -0.01em;
       color: #FFFFFF;
+    }}
+    .footer-how-link {{
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--signage-yellow);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.15s ease, text-decoration 0.15s ease;
+      width: fit-content;
+    }}
+    .footer-how-link:hover {{
+      text-decoration: underline;
+      opacity: 0.85;
     }}
     .footer-links {{
       display: flex;
@@ -1446,7 +1466,10 @@ def main():
   <!-- Simplified Full-Fill Footer (Edge to Edge) -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <span class="footer-name">A Project by Artemio Arcega</span>
+      <div class="footer-brand">
+        <span class="footer-name">A Project by Artemio Arcega</span>
+        <a href="https://artemiui.vercel.app/blog/article10" target="_blank" rel="noopener noreferrer" class="footer-how-link" title="How it Works: Technical Simulation Writeup">How it Works</a>
+      </div>
       <div class="footer-links">
         <a href="https://artemiui.vercel.app" target="_blank" rel="noopener noreferrer" class="footer-icon-link" title="Portfolio (artemiui.vercel.app)" aria-label="Portfolio">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
