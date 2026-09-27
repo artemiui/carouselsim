@@ -2,17 +2,19 @@
 """Unified Interactive EDSA Busway Simulation Dashboard Generator.
 
 Features:
-- "Intelly" design system: warm cream canvas, deep charcoal rounded sidebar dock, pastel bento cards.
-- Plus Jakarta Sans modern geometric humanist typography.
+- Square-oriented transit wayfinding graphic design (DOTr / Metro Manila signage standard).
+- Transit signage colors: Canary Yellow (#FFCC00), Obsidian Black (#111215), LRT-2 Purple (#7C3AED), Busway Blue (#2563EB).
+- Black-fill developer information footer with info from artemiui.vercel.app (Artemio Arcega).
+- Dual Visualizations:
+  1. Concentric Rings (Circular Carousel): Inner & Outer concentric circles representing Northbound (↺ counter-clockwise)
+     and Southbound (↻ clockwise) with stations at equal angular spacing (15° apart), and smaller nodes representing each bus.
+  2. Calibrated Route Map: True geometric schematic alignment matching the official EDSA Carousel Transit Map attachment.
 - Hover description overlays (tooltips) for all transit simulation variables.
-- Complete calibrated 24-station route from Monumento to PITX with accurate OSM coordinates.
-- Dual-direction circulation: live Southbound (SB) and Northbound (NB) rotation.
-- Interactive direction toggle [ SB | NB ] reversing checklist sequence (PITX -> Monumento).
-- Generalized bottleneck model: dynamic rogue actor ("nagpupuno" bus driver) lingering.
+- Demand trend chart with ONLY the peak numerically labeled (no vertical highlight lines).
+- Complete calibrated 24-station route from Monumento to PITX with accurate OSM & schematic coordinates.
+- Dual-direction circulation: live Southbound (SB) and Northbound (NB) rotation with reverse checklist.
 - Dynamic floating chip & beacon ripple tracking active rogue actor / chokepoint per direction.
 - Zero-passenger free-flow rule: platforms without demand do not cause artificial clogging.
-- Dual-direction bus animation: Southbound (royal blue) and Northbound (sky cyan) buses.
-- Interactive Line Graph inside pastel rose card showing total waiting passengers over time with scrubber tracking cursor.
 - Absolutely zero emojis (pure SVG icons and clean typography throughout).
 """
 
@@ -20,6 +22,7 @@ from __future__ import annotations
 import sys
 import os
 import json
+import math
 import logging
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -71,24 +74,92 @@ def main():
     }
 
     raw_stations = get_default_stations()
-    min_lat = min(s.lat for s in raw_stations)
-    max_lat = max(s.lat for s in raw_stations)
-    min_lon = min(s.lon for s in raw_stations)
-    max_lon = max(s.lon for s in raw_stations)
 
-    pad_x = 45
-    pad_y = 35
-    w = 540 - 2 * pad_x
-    h = 280 - 2 * pad_y
+    # Fixed geographic route coordinates matching the official EDSA Carousel Transit Map attachment
+    schematic_coords = {
+        "Monumento": (75.0, 32.0),
+        "Bagong Barrio": (115.0, 32.0),
+        "Balintawak": (155.0, 32.0),
+        "Kaingin": (195.0, 32.0),
+        "Fernando Poe Jr. (Roosevelt)": (235.0, 32.0),
+        "SM North EDSA": (275.0, 38.0),
+        "North Avenue": (310.0, 56.0),
+        "Philam": (335.0, 76.0),
+        "Quezon Avenue": (360.0, 98.0),
+        "Kamuning": (385.0, 120.0),
+        "Nepa Q-Mart": (410.0, 144.0),
+        "Main Avenue (Cubao)": (435.0, 172.0),
+        "Santolan": (445.0, 198.0),
+        "Ortigas": (440.0, 224.0),
+        "Guadalupe": (405.0, 252.0),
+        "Buendia": (365.0, 268.0),
+        "One Ayala (Ayala)": (320.0, 276.0),
+        "Tramo": (270.0, 278.0),
+        "Taft Avenue": (220.0, 278.0),
+        "Roxas Boulevard": (170.0, 278.0),
+        "SM Mall of Asia (MOA)": (125.0, 278.0),
+        "DFA Aseana": (148.0, 294.0),
+        "City of Dreams": (148.0, 308.0),
+        "Parañaque Integrated Terminal Exchange (PITX)": (148.0, 324.0),
+    }
+
+    # Station line codes (Metro transit signage format e.g. YL02 / PL08)
+    station_codes = {
+        "Monumento": "ED01",
+        "Bagong Barrio": "ED02",
+        "Balintawak": "ED03",
+        "Kaingin": "ED04",
+        "Fernando Poe Jr. (Roosevelt)": "ED05",
+        "SM North EDSA": "ED06",
+        "North Avenue": "ED07",
+        "Philam": "ED08",
+        "Quezon Avenue": "ED09",
+        "Kamuning": "ED10",
+        "Nepa Q-Mart": "ED11",
+        "Main Avenue (Cubao)": "ED12",
+        "Santolan": "ED13",
+        "Ortigas": "ED14",
+        "Guadalupe": "ED15",
+        "Buendia": "ED16",
+        "One Ayala (Ayala)": "ED17",
+        "Tramo": "ED18",
+        "Taft Avenue": "ED19",
+        "Roxas Boulevard": "ED20",
+        "SM Mall of Asia (MOA)": "ED21",
+        "DFA Aseana": "ED22",
+        "City of Dreams": "ED23",
+        "Parañaque Integrated Terminal Exchange (PITX)": "ED24",
+    }
+
+    # Circular Carousel: concentric circles (Outer = Southbound, Inner = Northbound)
+    circle_cx = 270.0
+    circle_cy = 160.0
+    r_outer = 115.0  # Southbound (Clockwise)
+    r_inner = 85.0   # Northbound (Counter-Clockwise)
 
     station_svg_nodes = []
-    for s in raw_stations:
-        x = round(pad_x + ((s.lon - min_lon) / (max_lon - min_lon)) * w, 1)
-        y = round(pad_y + ((max_lat - s.lat) / (max_lat - min_lat)) * h, 1)
+    num_st = len(raw_stations)  # 24
+    for i, s in enumerate(raw_stations):
+        rx, ry = schematic_coords.get(s.name, (100.0, 100.0))
+        code = station_codes.get(s.name, f"ED{i+1:02d}")
+
+        # Equal-distance circular coordinates (starting from Monumento at 12 o'clock, progressing clockwise)
+        theta = -math.pi / 2.0 + (i / num_st) * (2.0 * math.pi)
+        cx_out = round(circle_cx + r_outer * math.cos(theta), 1)
+        cy_out = round(circle_cy + r_outer * math.sin(theta), 1)
+        cx_in = round(circle_cx + r_inner * math.cos(theta), 1)
+        cy_in = round(circle_cy + r_inner * math.sin(theta), 1)
+
         station_svg_nodes.append({
             'name': s.name,
-            'x': x,
-            'y': y,
+            'code': code,
+            'x': rx,
+            'y': ry,
+            'circle_x_out': cx_out,
+            'circle_y_out': cy_out,
+            'circle_x_in': cx_in,
+            'circle_y_in': cy_in,
+            'theta': theta,
             'is_hotspot': s.is_hotspot,
             'is_terminal': s.is_terminal,
             'berths': s.berth_capacity,
@@ -113,51 +184,31 @@ def main():
     :root {{
       --bg-page: #F7F4EB;
       --bg-card: #FFFFFF;
-      --border-subtle: #EBE6DA;
+      --border-subtle: #E4E0D5;
       --border-dark: #27272A;
       
-      --sidebar-bg: #18181B;
-      --sidebar-text: #A1A1AA;
-      --sidebar-active: #FFFFFF;
+      /* Transit Wayfinding Palette */
+      --signage-black: #111215;
+      --signage-dark-card: #18191E;
+      --signage-yellow: #FFCC00;
+      --signage-yellow-hover: #E6B800;
+      --signage-purple: #7C3AED;
+      --signage-blue: #2563EB;
+      --signage-cyan: #0284C7;
+      --signage-orange: #EA580C;
+      --signage-green: #10B981;
       
-      --text-main: #18181B;
-      --text-muted: #71717A;
-      --text-light: #A1A1AA;
+      --text-main: #111215;
+      --text-muted: #52525B;
+      --text-light: #8E8E93;
       
-      /* Bento Pastel Theme */
-      --pastel-yellow-bg: #FEF9C3;
-      --pastel-yellow-border: #FEF08A;
-      --pastel-yellow-text: #713F12;
-      --pastel-yellow-accent: #CA8A04;
+      /* Square-oriented radii */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
       
-      --pastel-pink-bg: #FCE7F3;
-      --pastel-pink-border: #FBCFE8;
-      --pastel-pink-text: #831843;
-      --pastel-pink-accent: #DB2777;
-      
-      --pastel-green-bg: #DCFCE7;
-      --pastel-green-border: #BBF7D0;
-      --pastel-green-text: #14532D;
-      --pastel-green-accent: #16A34A;
-      
-      --pastel-blue-bg: #DBEAFE;
-      --pastel-blue-border: #BFDBFE;
-      --pastel-blue-text: #1E3A8A;
-      --pastel-blue-accent: #2563EB;
-      
-      --primary: #18181B;
-      --primary-blue: #2563EB;
-      --primary-cyan: #0284C7;
-      --accent-orange: #EA580C;
-      --accent-green: #16A34A;
-      
-      --radius-xl: 28px;
-      --radius-lg: 22px;
-      --radius-md: 16px;
-      --radius-sm: 10px;
-      
-      --shadow-soft: 0 4px 20px rgba(24, 24, 27, 0.04);
-      --shadow-floating: 0 12px 32px rgba(24, 24, 27, 0.08);
+      --shadow-soft: 0 2px 10px rgba(17, 18, 21, 0.04);
+      --shadow-floating: 0 10px 25px rgba(17, 18, 21, 0.08);
     }}
 
     * {{
@@ -172,18 +223,22 @@ def main():
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
-      justify-content: center;
-      padding: 24px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0;
       -webkit-font-smoothing: antialiased;
     }}
 
-    /* Global Workspace Layout */
+    /* Global Workspace Layout: Full Width without Sidebar */
     .dashboard-layout {{
       width: 100%;
       max-width: 1400px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
+      padding: 24px 24px 0 24px;
+      flex: 1;
     }}
 
     /* Main Content Container */
@@ -191,7 +246,7 @@ def main():
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
     }}
 
     /* Top Greeting & Action Header */
@@ -201,18 +256,40 @@ def main():
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-soft);
     }}
     .canvas-title-group h1 {{
-      font-size: 1.65rem;
+      font-size: 1.55rem;
       font-weight: 800;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
       color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }}
     .canvas-title-group p {{
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
-      font-weight: 500;
-      margin-top: 2px;
+      font-weight: 600;
+      margin-top: 3px;
+    }}
+
+    /* Square Wayfinding Header Badge */
+    .signage-tag-badge {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--signage-yellow);
+      color: var(--signage-black);
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.05em;
     }}
 
     .header-actions {{
@@ -220,36 +297,43 @@ def main():
       align-items: center;
       gap: 10px;
     }}
-    .pill-btn {{
+    .square-btn {{
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 18px;
-      border-radius: 9999px;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
       font-size: 0.82rem;
       font-weight: 700;
-      background: var(--bg-card);
+      background: #FFFFFF;
       border: 1px solid var(--border-subtle);
       color: var(--text-main);
       cursor: pointer;
       box-shadow: var(--shadow-soft);
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }}
-    .pill-btn:hover {{
-      border-color: #D4D4D8;
-      transform: translateY(-1px);
+    .square-btn:hover {{
+      border-color: #A1A1AA;
+      background: #FAF8F2;
     }}
-    .pill-btn.dark {{
-      background: #18181B;
+    .square-btn.dark {{
+      background: var(--signage-black);
       color: #FFFFFF;
-      border-color: #18181B;
-      box-shadow: 0 4px 12px rgba(24, 24, 27, 0.15);
+      border-color: var(--signage-black);
     }}
-    .pill-btn.dark:hover {{
+    .square-btn.dark:hover {{
       background: #27272A;
     }}
+    .square-btn.yellow {{
+      background: var(--signage-yellow);
+      color: var(--signage-black);
+      border-color: var(--signage-yellow);
+    }}
+    .square-btn.yellow:hover {{
+      background: var(--signage-yellow-hover);
+    }}
 
-    /* Row 1: Bento Pastel Metric Cards Grid */
+    /* Row 1: Square-Oriented Bento Metric Cards */
     .bento-metrics {{
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -265,102 +349,106 @@ def main():
       overflow: hidden;
       box-shadow: var(--shadow-soft);
       min-height: 125px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
       cursor: default;
+      border: 1px solid var(--border-subtle);
+      background: #FFFFFF;
     }}
     .bento-card:hover {{
       transform: translateY(-2px);
       box-shadow: var(--shadow-floating);
     }}
 
-    /* Card 1: Pastel Yellow */
+    /* Card Themes with Square Badges */
     .bento-yellow {{
-      background: var(--pastel-yellow-bg);
-      border: 1px solid var(--pastel-yellow-border);
-      color: var(--pastel-yellow-text);
+      border-left: 5px solid var(--signage-yellow);
+      background: #FEFCE8;
     }}
-    /* Card 2: Pastel Pink */
     .bento-pink {{
-      background: var(--pastel-pink-bg);
-      border: 1px solid var(--pastel-pink-border);
-      color: var(--pastel-pink-text);
+      border-left: 5px solid #DB2777;
+      background: #FDF2F8;
     }}
-    /* Card 3: Pastel Green */
     .bento-green {{
-      background: var(--pastel-green-bg);
-      border: 1px solid var(--pastel-green-border);
-      color: var(--pastel-green-text);
+      border-left: 5px solid var(--signage-green);
+      background: #ECFDF5;
     }}
-    /* Card 4: Pastel Blue */
     .bento-blue {{
-      background: var(--pastel-blue-bg);
-      border: 1px solid var(--pastel-blue-border);
-      color: var(--pastel-blue-text);
+      border-left: 5px solid var(--signage-blue);
+      background: #EFF6FF;
     }}
 
     /* Card Top Typography */
     .bento-top {{
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       margin-bottom: 8px;
     }}
     .bento-label {{
-      font-size: 0.8rem;
-      font-weight: 700;
+      font-size: 0.78rem;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      opacity: 0.85;
+      color: var(--text-main);
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }}
     .bento-num {{
       font-size: 1.85rem;
       font-weight: 800;
       line-height: 1.1;
       letter-spacing: -0.03em;
+      color: var(--text-main);
     }}
     .bento-unit {{
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
-      opacity: 0.8;
+      color: var(--text-muted);
     }}
     .bento-sub {{
       font-size: 0.74rem;
       font-weight: 600;
-      opacity: 0.8;
+      color: var(--text-muted);
       margin-top: 4px;
     }}
 
-    /* Decorative Shapes for Bento Cards */
-    .bento-bg-shape {{
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      opacity: 0.22;
-      pointer-events: none;
+    /* Square Badge Label */
+    .card-square-tag {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.04em;
     }}
+    .card-square-tag.yellow {{ background: var(--signage-yellow); color: #111215; }}
+    .card-square-tag.pink {{ background: #DB2777; color: #FFFFFF; }}
+    .card-square-tag.green {{ background: var(--signage-green); color: #FFFFFF; }}
+    .card-square-tag.blue {{ background: var(--signage-blue); color: #FFFFFF; }}
 
     /* Mini Bars for Waiting Pax */
     .bento-bars {{
       display: flex;
       align-items: flex-end;
       gap: 3px;
-      height: 36px;
+      height: 32px;
     }}
     .bento-bar {{
       width: 5px;
-      border-radius: 3px;
-      background: currentColor;
+      border-radius: 2px;
+      background: var(--signage-black);
       opacity: 0.25;
       transition: height 0.3s ease;
     }}
     .bento-bar.active {{
-      opacity: 0.85;
+      background: var(--signage-yellow);
+      opacity: 1;
     }}
 
-    /* Pink Card Embedded Demand Line Chart */
+    /* Embedded Demand Line Chart */
     .demand-chart-box {{
       position: relative;
       width: 100%;
@@ -371,8 +459,8 @@ def main():
     /* Row 2: Main Workspace Grid (Checkpoints + Map) */
     .workspace-grid {{
       display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 20px;
+      grid-template-columns: 370px 1fr;
+      gap: 18px;
       align-items: stretch;
       min-height: 540px;
     }}
@@ -383,7 +471,7 @@ def main():
       border-radius: var(--radius-lg);
       border: 1px solid var(--border-subtle);
       box-shadow: var(--shadow-soft);
-      padding: 22px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -393,7 +481,9 @@ def main():
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
     }}
     .card-header-title {{
       font-size: 1.05rem;
@@ -408,30 +498,29 @@ def main():
       margin-top: 2px;
     }}
 
-    /* Direction Pill Switcher */
-    .dir-toggle-pill {{
+    /* Square Direction Toggle Switcher */
+    .square-toggle-group {{
       display: inline-flex;
-      background: #F4F1E8;
+      background: #EDEAE1;
       padding: 3px;
-      border-radius: 9999px;
-      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
       gap: 3px;
     }}
-    .dir-toggle-btn {{
+    .square-toggle-btn {{
       border: none;
       background: transparent;
-      padding: 4px 12px;
-      border-radius: 9999px;
+      padding: 4px 10px;
+      border-radius: 3px;
       font-size: 0.74rem;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }}
-    .dir-toggle-btn.active {{
-      background: #18181B;
-      color: #FFFFFF;
-      box-shadow: 0 2px 6px rgba(24, 24, 27, 0.2);
+    .square-toggle-btn.active {{
+      background: var(--signage-black);
+      color: var(--signage-yellow);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
     }}
 
     /* Scrollable Station List */
@@ -447,60 +536,96 @@ def main():
     }}
     .station-list-container::-webkit-scrollbar-thumb {{
       background: #D4D4D8;
-      border-radius: 4px;
+      border-radius: 3px;
     }}
 
+    /* Wayfinding Signage Station Row */
     .station-row {{
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 10px;
-      border-radius: 12px;
+      padding: 7px 9px;
+      border-radius: var(--radius-sm);
       transition: background 0.15s ease;
       cursor: pointer;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
+      border: 1px solid transparent;
     }}
     .station-row:hover {{
       background: #FAF8F2;
+      border-color: #E2DDD0;
     }}
     .station-left {{
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       min-width: 0;
     }}
-    .st-dot-badge {{
+
+    /* Square Pictograms & Station Codes (like YL02 / PL08 in attachment) */
+    .signage-badge {{
       width: 26px;
       height: 26px;
-      border-radius: 8px;
-      background: #F4F1E8;
+      border-radius: 3px;
+      background: var(--signage-black);
+      color: var(--signage-yellow);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       font-weight: 800;
-      color: var(--text-muted);
+      flex-shrink: 0;
+      font-family: monospace;
+      border: 1px solid #27272A;
+    }}
+    .signage-badge.terminal {{
+      background: var(--signage-yellow);
+      color: var(--signage-black);
+      border-color: var(--signage-yellow);
+    }}
+    .signage-badge.hotspot {{
+      background: var(--signage-purple);
+      color: #FFFFFF;
+      border-color: var(--signage-purple);
+    }}
+    .signage-icon-box {{
+      width: 24px;
+      height: 24px;
+      border-radius: 3px;
+      background: var(--signage-yellow);
+      color: #111215;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }}
-    .st-dot-badge.hotspot {{
-      background: #FEE2E2;
-      color: #DC2626;
+    .signage-icon-box.purple {{
+      background: var(--signage-purple);
+      color: #FFFFFF;
     }}
-    .st-dot-badge.terminal {{
-      background: #DBEAFE;
-      color: #2563EB;
+    .station-code-pill {{
+      font-size: 0.64rem;
+      font-weight: 800;
+      color: var(--signage-yellow);
+      background: var(--signage-black);
+      border: 1px solid var(--signage-yellow);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+      letter-spacing: 0.04em;
     }}
+
     .st-name {{
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
       color: var(--text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 170px;
+      max-width: 155px;
     }}
     .st-sub {{
-      font-size: 0.69rem;
+      font-size: 0.68rem;
       color: var(--text-muted);
       font-weight: 500;
     }}
@@ -512,26 +637,26 @@ def main():
       flex-shrink: 0;
     }}
 
-    /* Bottom Info Pill */
+    /* Bottom Info Banner */
     .checklist-footer {{
-      margin-top: 14px;
+      margin-top: 12px;
       padding: 8px 12px;
-      border-radius: 12px;
-      background: #FAF8F2;
-      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: var(--signage-black);
+      color: var(--signage-yellow);
       font-size: 0.74rem;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-weight: 700;
       text-align: center;
+      letter-spacing: 0.03em;
     }}
 
-    /* Right Card: Route Schematic Map & Scrubber */
+    /* Right Card: Map Card with Concentric Rings & Fixed Route Map */
     .map-card {{
       background: var(--bg-card);
       border-radius: var(--radius-lg);
       border: 1px solid var(--border-subtle);
       box-shadow: var(--shadow-soft);
-      padding: 22px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -539,29 +664,25 @@ def main():
       overflow: hidden;
     }}
 
-    /* Dynamic Floating Chokepoint Chip */
+    /* Dynamic Wayfinding Chokepoint Chip */
     .lane-status-chip {{
-      position: absolute;
-      top: 26px;
-      left: 26px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border-subtle);
-      border-radius: 9999px;
-      padding: 6px 14px;
+      background: var(--signage-black);
+      color: #FFFFFF;
+      border: 1px solid #27272A;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 0.76rem;
       font-weight: 700;
-      z-index: 10;
-      box-shadow: 0 4px 14px rgba(24, 24, 27, 0.06);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }}
     .status-beacon-dot {{
       width: 8px;
       height: 8px;
-      border-radius: 50%;
-      background: var(--accent-green);
+      border-radius: 2px;
+      background: var(--signage-green);
     }}
 
     /* Map Legend */
@@ -569,11 +690,12 @@ def main():
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
       font-size: 0.72rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }}
     .legend-item {{
       display: inline-flex;
@@ -581,47 +703,100 @@ def main():
       gap: 5px;
     }}
 
-    /* Vector Map Canvas Wrapper */
+    /* Visualization Canvas Wrapper with Zoom & Pan */
     .map-canvas-wrapper {{
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      background: radial-gradient(circle at 50% 50%, #FAF8F2 0%, #F5F1E6 100%);
+      background: #FAF8F2;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-subtle);
-      padding: 10px;
-      margin-bottom: 14px;
-      min-height: 340px;
+      padding: 8px;
+      margin-bottom: 12px;
+      min-height: 350px;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+    }}
+    .map-canvas-wrapper:active {{
+      cursor: grabbing;
+    }}
+
+    /* Floating Square Wayfinding Map Zoom Toolbar */
+    .map-zoom-controls {{
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: rgba(17, 18, 21, 0.94);
+      backdrop-filter: blur(8px);
+      border: 1px solid #27272A;
+      border-radius: var(--radius-sm);
+      padding: 5px;
+      z-index: 25;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }}
+    .zoom-btn {{
+      width: 28px;
+      height: 28px;
+      background: #18191E;
+      color: var(--signage-yellow);
+      border: 1px solid #3F3F46;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 800;
+      transition: all 0.15s ease;
+    }}
+    .zoom-btn:hover {{
+      background: #27272A;
+      color: #FFFFFF;
+      border-color: var(--signage-yellow);
+      transform: scale(1.05);
+    }}
+    .zoom-level-badge {{
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #D4D4D8;
+      font-family: monospace;
+      padding: 2px 2px;
+      letter-spacing: 0.02em;
     }}
 
     /* Bottom Scrubber Controller */
     .scrubber-dock {{
       display: flex;
       align-items: center;
-      gap: 14px;
-      background: #FAF8F2;
+      gap: 12px;
+      background: #FFFFFF;
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 10px 16px;
+      padding: 8px 14px;
     }}
-    .play-pill-btn {{
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #18181B;
-      color: #FFFFFF;
+    .play-square-btn {{
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--signage-black);
+      color: var(--signage-yellow);
       border: none;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(24, 24, 27, 0.2);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
       transition: background 0.15s ease;
       flex-shrink: 0;
     }}
-    .play-pill-btn:hover {{
+    .play-square-btn:hover {{
       background: #27272A;
     }}
     .clock-tag {{
@@ -636,26 +811,26 @@ def main():
       height: 6px;
       -webkit-appearance: none;
       background: #E4E4E7;
-      border-radius: 9999px;
+      border-radius: 2px;
       outline: none;
     }}
     .time-slider::-webkit-slider-thumb {{
       -webkit-appearance: none;
       width: 16px;
       height: 16px;
-      border-radius: 50%;
-      background: #18181B;
+      border-radius: 2px;
+      background: var(--signage-black);
       cursor: pointer;
-      border: 2px solid #FFFFFF;
-      box-shadow: 0 1px 4px rgba(24, 24, 27, 0.25);
+      border: 2px solid var(--signage-yellow);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
     }}
     .speed-pill {{
       padding: 4px 10px;
-      border-radius: 9999px;
+      border-radius: var(--radius-sm);
       background: #FFFFFF;
       border: 1px solid var(--border-subtle);
       font-size: 0.74rem;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-main);
       cursor: pointer;
     }}
@@ -664,23 +839,23 @@ def main():
     #var-tooltip {{
       position: fixed;
       display: none;
-      background: #18181B;
+      background: var(--signage-black);
       color: #FFFFFF;
       padding: 8px 14px;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       font-size: 0.74rem;
       line-height: 1.35;
       max-width: 250px;
       pointer-events: none;
       z-index: 9999;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--signage-yellow);
       transition: opacity 0.15s ease;
     }}
     #var-tooltip strong {{
       display: block;
-      color: #F4F4F5;
-      font-weight: 700;
+      color: var(--signage-yellow);
+      font-weight: 800;
       margin-bottom: 2px;
       letter-spacing: -0.01em;
     }}
@@ -689,23 +864,74 @@ def main():
     #map-tooltip {{
       position: absolute;
       display: none;
-      background: #18181B;
+      background: var(--signage-black);
       color: #FFFFFF;
       padding: 8px 12px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-size: 0.72rem;
-      font-weight: 500;
+      font-weight: 600;
       pointer-events: none;
       z-index: 20;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      border: 1px solid #3F3F46;
       line-height: 1.35;
+    }}
+
+    /* Entire Full-Fill Footer (Edge to Edge) */
+    .site-footer {{
+      width: 100%;
+      background: var(--signage-black);
+      border-top: 1px solid #27272A;
+      padding: 22px 0;
+      margin-top: 36px;
+    }}
+    .footer-inner {{
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }}
+    .footer-name {{
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #FFFFFF;
+    }}
+    .footer-links {{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }}
+    .footer-icon-link {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--signage-dark-card);
+      border: 1px solid #27272A;
+      color: #A1A1AA;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }}
+    .footer-icon-link:hover {{
+      background: #27272A;
+      color: var(--signage-yellow);
+      border-color: var(--signage-yellow);
+      transform: translateY(-2px);
     }}
 
     /* Modal Styling */
     .modal-backdrop {{
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(24, 24, 27, 0.45);
+      background: rgba(17, 18, 21, 0.55);
       backdrop-filter: blur(4px);
       display: none;
       align-items: center;
@@ -715,10 +941,10 @@ def main():
     .modal-card {{
       background: #FFFFFF;
       border-radius: var(--radius-lg);
-      padding: 28px 32px;
+      padding: 26px 30px;
       width: 100%;
       max-width: 500px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
       border: 1px solid var(--border-subtle);
     }}
     .modal-title {{
@@ -742,7 +968,7 @@ def main():
     .form-field label {{
       display: block;
       font-size: 0.72rem;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: var(--text-muted);
@@ -751,7 +977,7 @@ def main():
     .form-field input, .form-field select {{
       width: 100%;
       padding: 9px 12px;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border-subtle);
       font-size: 0.86rem;
       outline: none;
@@ -759,7 +985,7 @@ def main():
       color: var(--text-main);
     }}
     .form-field input:focus, .form-field select:focus {{
-      border-color: #18181B;
+      border-color: var(--signage-black);
       background: #FFFFFF;
     }}
     .modal-actions {{
@@ -772,7 +998,7 @@ def main():
     .loading-overlay {{
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(24, 24, 27, 0.65);
+      background: rgba(17, 18, 21, 0.7);
       backdrop-filter: blur(8px);
       display: none;
       align-items: center;
@@ -782,12 +1008,12 @@ def main():
     }}
     .loading-box {{
       background: #FFFFFF;
-      border-radius: var(--radius-xl);
+      border-radius: var(--radius-lg);
       padding: 36px 40px;
       width: 100%;
       max-width: 460px;
       text-align: center;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
       border: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
@@ -799,7 +1025,8 @@ def main():
       height: 44px;
       border-radius: 50%;
       border: 4px solid #F4F1E8;
-      border-top-color: #18181B;
+      border-top-color: var(--signage-yellow);
+      border-right-color: var(--signage-black);
       animation: spin 0.9s linear infinite;
     }}
     @keyframes spin {{
@@ -809,15 +1036,15 @@ def main():
       width: 100%;
       background: #F4F1E8;
       height: 6px;
-      border-radius: 9999px;
+      border-radius: 2px;
       overflow: hidden;
       margin-top: 6px;
     }}
     .progress-bar-fill {{
       height: 100%;
       width: 0%;
-      background: #18181B;
-      border-radius: 9999px;
+      background: var(--signage-black);
+      border-radius: 2px;
       transition: width 0.3s ease;
     }}
 
@@ -833,7 +1060,7 @@ def main():
       left: 0;
       right: 0;
       border-bottom: 1px dotted currentColor;
-      opacity: 0.45;
+      opacity: 0.5;
     }}
   </style>
 </head>
@@ -854,7 +1081,7 @@ def main():
       <div class="progress-bar-box">
         <div class="progress-bar-fill" id="loading-progress-bar"></div>
       </div>
-      <div style="font-size:0.72rem; color:var(--text-light); font-weight:700; text-transform:uppercase;" id="loading-stage-label">Step 1 of 4: Calibrating 24 Stations</div>
+      <div style="font-size:0.72rem; color:var(--text-light); font-weight:800; text-transform:uppercase;" id="loading-stage-label">Step 1 of 4: Calibrating 24 Stations</div>
     </div>
   </div>
 
@@ -866,39 +1093,36 @@ def main():
       <!-- Header Action Bar -->
       <header class="canvas-header">
         <div class="canvas-title-group">
-          <h1>Corridor Circulation Overview</h1>
+          <h1>
+            <span class="signage-tag-badge">EDSA</span>
+            Corridor Circulation Overview
+          </h1>
           <p>Live multi-berth circulation and transit demand telemetry across 24 stations.</p>
         </div>
 
         <div class="header-actions">
-          <button class="pill-btn" onclick="openModal()" data-tooltip-title="Time Window" data-tooltip="Active observation window for simulated passenger arrivals and dispatch schedule.">
+          <button class="square-btn" onclick="openModal()" data-tooltip-title="Time Window" data-tooltip="Active observation window for simulated passenger arrivals and dispatch schedule.">
             <span id="btn-time-label">08:00 AM – 11:00 AM</span>
           </button>
-          <button class="pill-btn" onclick="openModal()" data-tooltip-title="Simulation Controls" data-tooltip="Configure headway, active fleet, bus capacity, and rogue actor lingering probability.">
+          <button class="square-btn" onclick="openModal()" data-tooltip-title="Simulation Controls" data-tooltip="Configure headway, active fleet, bus capacity, and rogue actor lingering probability.">
             Parameters
           </button>
-          <button class="pill-btn dark" onclick="runDirectSimulation()" data-tooltip-title="Run Simulation Engine" data-tooltip="Execute real-time SimPy discrete-event simulation across the 24-station corridor.">
+          <button class="square-btn yellow" onclick="runDirectSimulation()" data-tooltip-title="Run Simulation Engine" data-tooltip="Execute real-time SimPy discrete-event simulation across the 24-station corridor.">
             Run Simulation
           </button>
         </div>
       </header>
 
-      <!-- Row 1: Bento Pastel Metric Cards Grid -->
+      <!-- Row 1: Square Bento Metric Cards -->
       <section class="bento-metrics">
         
-        <!-- Card 1: Pastel Yellow (Waiting Passengers) -->
+        <!-- Card 1: Waiting Passengers -->
         <div class="bento-card bento-yellow">
           <div class="bento-top">
             <span class="bento-label has-var-tooltip" data-tooltip-title="Waiting Passengers (pax_q)" data-tooltip="Total commuters queued at all 24 station platforms awaiting bus arrival.">
-              Waiting Passengers
+              Waiting Commuters
             </span>
-            <div class="bento-bars" id="mini-bars-pax">
-              <div class="bento-bar active" style="height: 18px;"></div>
-              <div class="bento-bar active" style="height: 26px;"></div>
-              <div class="bento-bar active" style="height: 34px;"></div>
-              <div class="bento-bar active" style="height: 22px;"></div>
-              <div class="bento-bar active" style="height: 28px;"></div>
-            </div>
+            <span class="card-square-tag yellow">PAX</span>
           </div>
           <div>
             <div class="bento-num" id="kpi-pax">4,839</div>
@@ -906,19 +1130,15 @@ def main():
               <span id="kpi-pax-sb-split">SB: 2,640</span> &nbsp;|&nbsp; <span id="kpi-pax-nb-split">NB: 2,199</span>
             </div>
           </div>
-          <!-- Geometric Plus shape -->
-          <svg class="bento-bg-shape" width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 11h-6V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2z"/>
-          </svg>
         </div>
 
-        <!-- Card 2: Pastel Pink (Demand Trend Line Chart) -->
+        <!-- Card 2: Demand Trend Line Chart -->
         <div class="bento-card bento-pink">
           <div class="bento-top">
             <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Total platform waiting passengers fluctuating over time across the simulation window.">
               Demand Trend
             </span>
-            <span id="chart-live-val" style="font-size:1.05rem; font-weight:800; font-family:monospace;">4,839 pax</span>
+            <span id="chart-live-val" style="font-size:1.05rem; font-weight:800; font-family:monospace; color:#831843;">4,839 pax</span>
           </div>
           
           <div class="demand-chart-box">
@@ -937,59 +1157,43 @@ def main():
             </svg>
           </div>
 
-          <div style="display:flex; justify-content:space-between; font-size:0.68rem; font-weight:700; opacity:0.8; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.68rem; font-weight:800; opacity:0.8; margin-top:4px;">
             <span id="chart-time-start">08:00 AM</span>
             <span id="chart-time-mid">09:30 AM</span>
             <span id="chart-time-end">11:00 AM</span>
           </div>
         </div>
 
-        <!-- Card 3: Pastel Green (Operating Fleet) -->
+        <!-- Card 3: Operating Fleet -->
         <div class="bento-card bento-green">
           <div class="bento-top">
             <span class="bento-label has-var-tooltip" data-tooltip-title="Operating Fleet (fleet_size)" data-tooltip="Total active transit buses circulating inside the segregated median busway.">
               Operating Fleet
             </span>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="15" rx="3"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-              <circle cx="7" cy="15" r="1.5"/>
-              <circle cx="17" cy="15" r="1.5"/>
-            </svg>
+            <span class="card-square-tag green">FLEET</span>
           </div>
           <div>
             <div class="bento-num" id="kpi-fleet">100 <span class="bento-unit">buses</span></div>
             <div class="bento-sub has-var-tooltip" data-tooltip-title="Active Lane Allocation" data-tooltip="Buses segregated in physical median lanes with dedicated bypass overtaking paths.">
-              Active in dedicated median lane
+              Active in dedicated median busway
             </div>
           </div>
-          <!-- Geometric Rounded Polygon shape -->
-          <svg class="bento-bg-shape" width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
         </div>
 
-        <!-- Card 4: Pastel Blue (Cycle Time & Reliability) -->
+        <!-- Card 4: Cycle Time & Reliability -->
         <div class="bento-card bento-blue">
           <div class="bento-top">
             <span class="bento-label has-var-tooltip" data-tooltip-title="Cycle Time & Headway Reliability" data-tooltip="Round-trip loop duration and headway consistency score (stability vs bunching).">
-              Mean Cycle & Score
+              Cycle & Score
             </span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
+            <span class="card-square-tag blue">SCORE</span>
           </div>
           <div>
             <div class="bento-num" id="kpi-cycle">91.2 <span class="bento-unit">min</span></div>
             <div class="bento-sub has-var-tooltip" data-tooltip-title="Reliability Index" data-tooltip="Percentage of bus arrivals adhering to scheduled dispatch headway tolerances.">
-              <span id="kpi-reliability" style="font-weight:800;">94%</span> Headway Stability
+              <span id="kpi-reliability" style="font-weight:800; color:var(--signage-blue);">94%</span> Headway Stability
             </div>
           </div>
-          <!-- Starburst decorative shape -->
-          <svg class="bento-bg-shape" width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="12" cy="12" r="8"/>
-          </svg>
         </div>
 
       </section>
@@ -1007,10 +1211,10 @@ def main():
               <div class="card-header-sub" id="dir-sub-title">24 Stations: Monumento → PITX</div>
             </div>
 
-            <!-- Direction Toggle Pill Switcher -->
-            <div class="dir-toggle-pill">
-              <button class="dir-toggle-btn active" id="btn-dir-sb" onclick="setCorridorDirection('southbound')" data-tooltip-title="Southbound (SB)" data-tooltip="Circulate from Monumento terminal to PITX terminal.">SB</button>
-              <button class="dir-toggle-btn" id="btn-dir-nb" onclick="setCorridorDirection('northbound')" data-tooltip-title="Northbound (NB)" data-tooltip="Circulate from PITX terminal to Monumento terminal.">NB</button>
+            <!-- Direction Toggle Switcher -->
+            <div class="square-toggle-group">
+              <button class="square-toggle-btn active" id="btn-dir-sb" onclick="setCorridorDirection('southbound')" data-tooltip-title="Southbound (SB)" data-tooltip="Circulate from Monumento terminal to PITX terminal.">SB</button>
+              <button class="square-toggle-btn" id="btn-dir-nb" onclick="setCorridorDirection('northbound')" data-tooltip-title="Northbound (NB)" data-tooltip="Circulate from PITX terminal to Monumento terminal.">NB</button>
             </div>
           </div>
 
@@ -1026,42 +1230,127 @@ def main():
           </div>
         </div>
 
-        <!-- Right: Route Map Schematic & Scrubber -->
+        <!-- Right: Map Card with Concentric Rings & Fixed Route Map -->
         <div class="map-card">
           
-          <!-- Dynamic Floating Chokepoint Chip -->
-          <div class="lane-status-chip" id="map-floating-chip">
-            <div class="status-beacon-dot" id="chip-status-dot"></div>
-            <span id="chip-station-name">Corridor Circulation Status</span> &nbsp;|&nbsp;
-            <span id="chip-queue-info" style="color:var(--accent-green);">Nominal flow</span>
+          <!-- Card Top Bar: Status Chip & View Mode Switcher -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+            <div class="lane-status-chip" id="map-floating-chip">
+              <div class="status-beacon-dot" id="chip-status-dot"></div>
+              <span id="chip-station-name">Corridor Circulation Status</span> &nbsp;|&nbsp;
+              <span id="chip-queue-info" style="color:var(--signage-green);">Nominal flow</span>
+            </div>
+
+            <!-- Dual-View Switcher: Concentric Rings vs Route Map -->
+            <div class="square-toggle-group">
+              <button class="square-toggle-btn active" id="btn-view-circle" onclick="setVisualMode('circle')" data-tooltip-title="Concentric Circles View" data-tooltip="Inner (NB ↺) & outer (SB ↻) concentric circles with equal-distance station nodes and circulating bus nodes.">
+                Concentric Rings
+              </button>
+              <button class="square-toggle-btn" id="btn-view-route" onclick="setVisualMode('route')" data-tooltip-title="Route Map View" data-tooltip="Calibrated EDSA corridor path matching the official transit alignment from the attachment.">
+                Route Map
+              </button>
+            </div>
           </div>
 
           <!-- Map Legend -->
           <div class="map-legend-bar">
-            <span class="legend-item has-var-tooltip" data-tooltip-title="Southbound Bus Lane" data-tooltip="Monumento towards PITX"><span style="color:#2563EB;">●</span> Southbound (SB)</span>
-            <span class="legend-item has-var-tooltip" data-tooltip-title="Northbound Bus Lane" data-tooltip="PITX towards Monumento"><span style="color:#0284C7;">●</span> Northbound (NB)</span>
-            <span class="legend-item has-var-tooltip" data-tooltip-title="Bottleneck / Rogue Bus" data-tooltip="Buses queued or lingering to fill up"><span style="color:#EA580C;">●</span> Rogue / Queued</span>
+            <span class="legend-item has-var-tooltip" data-tooltip-title="Terminal Station" data-tooltip="Start / End Hub (Monumento & PITX) with high passenger exchange.">
+              <svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle;"><circle cx="7" cy="7" r="6" fill="#FFCC00" stroke="#111215" stroke-width="1.8"/><circle cx="7" cy="7" r="2.2" fill="#111215"/></svg>
+              Terminal
+            </span>
+            <span class="legend-item has-var-tooltip" data-tooltip-title="Major Transfer Hub" data-tooltip="Key interchange node connected to MRT-3 or LRT-2.">
+              <svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle;"><circle cx="7" cy="7" r="5.5" fill="#7C3AED" stroke="#111215" stroke-width="1.6"/><circle cx="7" cy="7" r="1.8" fill="#FFFFFF"/></svg>
+              Transfer Hub
+            </span>
+            <span class="legend-item has-var-tooltip" data-tooltip-title="Regular Busway Station" data-tooltip="Calibrated median busway berth along EDSA.">
+              <svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle;"><circle cx="7" cy="7" r="5" fill="#FFFFFF" stroke="#111215" stroke-width="1.6"/><circle cx="7" cy="7" r="2" fill="#FFCC00"/></svg>
+              Station
+            </span>
+            <span class="legend-item has-var-tooltip" data-tooltip-title="Southbound Bus" data-tooltip="Bus circulating southbound (outer ring / clockwise).">
+              <span style="color:#2563EB; font-size:13px;">●</span> SB Bus
+            </span>
+            <span class="legend-item has-var-tooltip" data-tooltip-title="Northbound Bus" data-tooltip="Bus circulating northbound (inner ring / counter-clockwise).">
+              <span style="color:#0284C7; font-size:13px;">●</span> NB Bus
+            </span>
+            <span class="legend-item has-var-tooltip" data-tooltip-title="Rogue / Queued Bus" data-tooltip="Bus lingering to fill up or delayed in berth queue.">
+              <span style="color:#EA580C; font-size:13px;">●</span> Rogue / Queue
+            </span>
           </div>
 
-          <!-- Vector Map Canvas (Pure SVG, 100% offline) -->
+          <!-- Visualization Canvas Wrapper -->
           <div class="map-canvas-wrapper" id="map-container-el">
             <div id="map-tooltip"></div>
-            <svg id="route-vector-svg" width="100%" height="320" viewBox="0 0 540 280">
-              <!-- Subtle Background Road Grid -->
+
+            <!-- Floating Map Zoom Controls -->
+            <div class="map-zoom-controls">
+              <button class="zoom-btn" onclick="zoomIn()" title="Zoom In" aria-label="Zoom In">
+                +
+              </button>
+              <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out" aria-label="Zoom Out">
+                −
+              </button>
+              <button class="zoom-btn" onclick="resetZoom()" title="Reset View" aria-label="Reset View" style="font-size:0.78rem;">
+                ↺
+              </button>
+              <span class="zoom-level-badge" id="zoom-level-badge">100%</span>
+            </div>
+
+            <!-- 1. Dual Concentric Circles (Circular Carousel View) -->
+            <svg id="circle-canvas-svg" width="100%" height="330" viewBox="0 0 540 330">
+              <!-- Radial spoke connecting lines between inner and outer rings -->
+              <g id="circle-spokes-layer"></g>
+
+              <!-- Outer Track Ring (Southbound - Clockwise ↻) -->
+              <circle cx="270" cy="160" r="{r_outer}" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="3 4"/>
+              
+              <!-- Inner Track Ring (Northbound - Counter-Clockwise ↺) -->
+              <circle cx="270" cy="160" r="{r_inner}" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="3 4"/>
+
+              <!-- Central Hub Badge -->
+              <rect x="215" y="130" width="110" height="60" rx="4" fill="#111215" stroke="#27272A" stroke-width="1.5"/>
+              <rect x="220" y="135" width="22" height="15" rx="2" fill="#FFCC00"/>
+              <text x="231" y="146" font-size="8" font-weight="800" text-anchor="middle" fill="#111215">ED</text>
+              <text x="280" y="147" font-size="9.5" font-weight="800" text-anchor="middle" fill="#FFFFFF" letter-spacing="0.05em">CAROUSEL</text>
+              <text x="270" y="166" font-size="7.5" font-weight="700" text-anchor="middle" fill="#A1A1AA">Outer: ↻ SB | Inner: ↺ NB</text>
+              <text x="270" y="180" font-size="7.5" font-weight="800" text-anchor="middle" fill="#FFCC00">24 Station Berths</text>
+
+              <!-- Dynamic Beacon Ripple Group for Circle View -->
+              <g id="circle-beacon-group" style="display:none;">
+                <circle id="circle-beacon-ring" cx="0" cy="0" r="16" fill="rgba(234, 88, 12, 0.25)">
+                  <animate attributeName="r" values="10;20;10" dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <circle id="circle-beacon-mid" cx="0" cy="0" r="9" fill="rgba(234, 88, 12, 0.35)"/>
+                <circle id="circle-beacon-core" cx="0" cy="0" r="4.5" fill="#EA580C"/>
+              </g>
+
+              <!-- Smaller Bus Nodes Layer for Circle View -->
+              <g id="circle-bus-layer"></g>
+
+              <!-- Station Nodes Layer for Circle View -->
+              <g id="circle-stations-layer"></g>
+
+              <!-- Perimeter Station Text Annotations -->
+              <g id="circle-labels-layer"></g>
+            </svg>
+
+            <!-- 2. Fixed Geographic Route Map (Matching Attachment) -->
+            <svg id="route-vector-svg" width="100%" height="330" viewBox="0 0 540 330" style="display:none;">
+              <!-- Background Road Guidelines -->
               <line x1="20" y1="50" x2="520" y2="50" stroke="#EDE8DC" stroke-width="1.5"/>
               <line x1="20" y1="120" x2="520" y2="120" stroke="#EDE8DC" stroke-width="1.5"/>
               <line x1="20" y1="190" x2="520" y2="190" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="120" y1="20" x2="120" y2="260" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="260" y1="20" x2="260" y2="260" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="400" y1="20" x2="400" y2="260" stroke="#EDE8DC" stroke-width="1.5"/>
+              <line x1="120" y1="20" x2="120" y2="310" stroke="#EDE8DC" stroke-width="1.5"/>
+              <line x1="260" y1="20" x2="260" y2="310" stroke="#EDE8DC" stroke-width="1.5"/>
+              <line x1="400" y1="20" x2="400" y2="310" stroke="#EDE8DC" stroke-width="1.5"/>
 
               <!-- Main Route Transit Polyline -->
               <path id="route-path" d="{route_path_d}" 
                     stroke="#18181B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
               <path d="{route_path_d}" 
-                    stroke="#E4E4E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 6" fill="none"/>
+                    stroke="#FFCC00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 7" fill="none"/>
 
-              <!-- Dynamic Rogue Actor / Chokepoint Beacon -->
+              <!-- Dynamic Rogue Actor / Chokepoint Beacon for Route Map -->
               <g id="dynamic-beacon-group" style="display:none;">
                 <circle id="beacon-ring" cx="0" cy="0" r="18" fill="rgba(234, 88, 12, 0.2)">
                   <animate attributeName="r" values="12;22;12" dur="2s" repeatCount="indefinite" />
@@ -1077,24 +1366,25 @@ def main():
               <!-- Station Node Dots Layer -->
               <g id="station-dots-layer"></g>
 
-              <!-- Key Station Text Labels -->
-              <text x="45.0" y="24" font-size="9" font-weight="700" text-anchor="middle" fill="#71717A">Monumento</text>
-              <text x="270.9" y="24" font-size="8.5" font-weight="700" text-anchor="middle" fill="#71717A">FPJ / Muñoz</text>
-              <text x="325" y="24" font-size="9" font-weight="700" fill="#71717A">SM North</text>
-              <text x="382" y="70" font-size="8.5" font-weight="700" fill="#71717A">Quezon Ave</text>
-              <text x="462" y="104" font-size="8.5" font-weight="700" fill="#71717A">Cubao</text>
-              <text x="502" y="148" font-size="8.5" font-weight="700" fill="#71717A">Ortigas</text>
-              <text x="435" y="177" font-size="8.5" font-weight="700" fill="#71717A">Guadalupe</text>
-              <text x="325" y="202" font-size="8.5" font-weight="700" fill="#71717A">One Ayala</text>
-              <text x="145" y="196" font-size="8.5" font-weight="700" fill="#71717A">Taft</text>
-              <text x="45" y="230" font-size="8.5" font-weight="700" fill="#71717A">MOA</text>
-              <text x="165" y="260" font-size="9" font-weight="800" fill="#18181B">PITX</text>
+              <!-- Key Station Text Labels along Route -->
+              <text x="75.0" y="20" font-size="8.5" font-weight="700" text-anchor="middle" fill="#71717A">Monumento</text>
+              <text x="155.0" y="20" font-size="8" font-weight="700" text-anchor="middle" fill="#71717A">Balintawak</text>
+              <text x="235.0" y="20" font-size="8" font-weight="700" text-anchor="middle" fill="#71717A">FPJ / Muñoz</text>
+              <text x="275.0" y="24" font-size="8.5" font-weight="700" text-anchor="middle" fill="#71717A">SM North</text>
+              <text x="372.0" y="96" font-size="8" font-weight="700" fill="#71717A">Quezon Ave</text>
+              <text x="445.0" y="172" font-size="8" font-weight="700" fill="#71717A">Cubao</text>
+              <text x="450.0" y="224" font-size="8" font-weight="700" fill="#71717A">Ortigas</text>
+              <text x="415.0" y="252" font-size="8" font-weight="700" fill="#71717A">Guadalupe</text>
+              <text x="320.0" y="292" font-size="8" font-weight="700" text-anchor="middle" fill="#71717A">One Ayala</text>
+              <text x="220.0" y="294" font-size="8" font-weight="700" text-anchor="middle" fill="#71717A">Taft</text>
+              <text x="115.0" y="282" font-size="8" font-weight="700" text-anchor="end" fill="#71717A">MOA</text>
+              <text x="135.0" y="328" font-size="8.5" font-weight="800" text-anchor="end" fill="#18181B">PITX</text>
             </svg>
           </div>
 
           <!-- Bottom Scrubber Controller -->
           <div class="scrubber-dock">
-            <button class="play-pill-btn" id="btn-play" onclick="togglePlay()" data-tooltip-title="Play / Pause" data-tooltip="Control automated minute-by-minute playback.">
+            <button class="play-square-btn" id="btn-play" onclick="togglePlay()" data-tooltip-title="Play / Pause" data-tooltip="Control automated minute-by-minute playback.">
               <svg id="play-icon-svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="6,4 20,12 6,20"/>
               </svg>
@@ -1110,6 +1400,39 @@ def main():
     </main>
 
   </div>
+
+  <!-- Simplified Full-Fill Footer (Edge to Edge) -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-name">Artemio Arcega</span>
+      <div class="footer-links">
+        <a href="https://artemiui.vercel.app" target="_blank" rel="noopener noreferrer" class="footer-icon-link" title="Portfolio (artemiui.vercel.app)" aria-label="Portfolio">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </a>
+        <a href="https://github.com/artemiui" target="_blank" rel="noopener noreferrer" class="footer-icon-link" title="GitHub" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
+          </svg>
+        </a>
+        <a href="https://linkedin.com/in/artemioarcega" target="_blank" rel="noopener noreferrer" class="footer-icon-link" title="LinkedIn" aria-label="LinkedIn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+          </svg>
+        </a>
+        <a href="https://instagram.com/virtualsarili" target="_blank" rel="noopener noreferrer" class="footer-icon-link" title="Instagram" aria-label="Instagram">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
 
   <!-- Tweakable Simulation Parameter Modal -->
   <div class="modal-backdrop" id="sim-modal">
@@ -1154,8 +1477,8 @@ def main():
       </div>
 
       <div class="modal-actions">
-        <button class="pill-btn" onclick="closeModal()">Cancel</button>
-        <button class="pill-btn dark" id="btn-submit-sim" onclick="executeCustomSimulation()">
+        <button class="square-btn" onclick="closeModal()">Cancel</button>
+        <button class="square-btn yellow" id="btn-submit-sim" onclick="executeCustomSimulation()">
           Run Simulation
         </button>
       </div>
@@ -1175,6 +1498,75 @@ def main():
     let playSpeed = 1;
     let progressTimer = null;
     let currentDirection = 'southbound';
+    let currentVisualMode = 'circle';
+
+    // Camera state for Zoom & Pan on SVG Maps
+    const mapCameras = {{
+      circle: {{ scale: 1.0, x: 0, y: 0 }},
+      route: {{ scale: 1.0, x: 0, y: 0 }}
+    }};
+
+    function zoomIn() {{
+      const cam = mapCameras[currentVisualMode];
+      cam.scale = Math.min(4.0, Math.round(cam.scale * 1.25 * 100) / 100);
+      applyCamera();
+    }}
+
+    function zoomOut() {{
+      const cam = mapCameras[currentVisualMode];
+      cam.scale = Math.max(0.6, Math.round((cam.scale / 1.25) * 100) / 100);
+      applyCamera();
+    }}
+
+    function resetZoom() {{
+      const cam = mapCameras[currentVisualMode];
+      cam.scale = 1.0;
+      cam.x = 0;
+      cam.y = 0;
+      applyCamera();
+    }}
+
+    function applyCamera() {{
+      const mode = currentVisualMode;
+      const cam = mapCameras[mode];
+      const svg = (mode === 'circle') 
+        ? document.getElementById('circle-canvas-svg') 
+        : document.getElementById('route-vector-svg');
+      if (!svg) return;
+
+      const baseW = 540;
+      const baseH = 330;
+      const curW = baseW / cam.scale;
+      const curH = baseH / cam.scale;
+
+      const minX = (baseW / 2) - (curW / 2) - cam.x;
+      const minY = (baseH / 2) - (curH / 2) - cam.y;
+
+      svg.setAttribute('viewBox', `${{minX.toFixed(2)}} ${{minY.toFixed(2)}} ${{curW.toFixed(2)}} ${{curH.toFixed(2)}}`);
+
+      const badge = document.getElementById('zoom-level-badge');
+      if (badge) {{
+        badge.innerText = `${{Math.round(cam.scale * 100)}}%`;
+      }}
+    }}
+
+    // Toggle between Concentric Rings and Route Map views
+    function setVisualMode(mode) {{
+      currentVisualMode = mode;
+      document.getElementById('btn-view-circle').classList.toggle('active', mode === 'circle');
+      document.getElementById('btn-view-route').classList.toggle('active', mode === 'route');
+
+      const circleSvg = document.getElementById('circle-canvas-svg');
+      const routeSvg = document.getElementById('route-vector-svg');
+      if (mode === 'circle') {{
+        if (circleSvg) circleSvg.style.display = 'block';
+        if (routeSvg) routeSvg.style.display = 'none';
+      }} else {{
+        if (circleSvg) circleSvg.style.display = 'none';
+        if (routeSvg) routeSvg.style.display = 'block';
+      }}
+      applyCamera();
+    }}
 
     // Tooltip System for Variables
     function initVariableTooltips() {{
@@ -1222,21 +1614,100 @@ def main():
       renderSnapshot(currentIndex);
     }}
 
-    // Build Station Dots on SVG map
+    // Build Station Nodes for both Concentric Rings and Route Map (Bigger & High-Contrast Transit Wayfinding Colors)
     function initStationDots() {{
-      const layer = document.getElementById('station-dots-layer');
-      if (!layer) return;
-      let html = '';
-      stationDefs.forEach((st, i) => {{
-        const color = st.is_terminal ? '#18181B' : (st.is_hotspot ? '#EA580C' : '#3B82F6');
-        const r = st.is_terminal ? 5.5 : (st.is_hotspot ? 5.0 : 4.0);
-        html += `<circle id="dot-${{i}}" cx="${{st.x}}" cy="${{st.y}}" r="${{r}}" fill="${{color}}" stroke="#FFFFFF" stroke-width="1.5" 
-                        onmouseenter="showStationTooltip(event, ${{i}})" onmouseleave="hideStationTooltip()" style="cursor:pointer;" />`;
-      }});
-      layer.innerHTML = html;
+      // 1. Concentric Circles View
+      const circleSpokes = document.getElementById('circle-spokes-layer');
+      const circleStLayer = document.getElementById('circle-stations-layer');
+      const circleLblLayer = document.getElementById('circle-labels-layer');
+
+      if (circleSpokes && circleStLayer && circleLblLayer) {{
+        let spokesHtml = '';
+        let dotsHtml = '';
+        let labelsHtml = '';
+
+        stationDefs.forEach((st, i) => {{
+          // Spoke connector line
+          spokesHtml += `<line x1="${{st.circle_x_in}}" y1="${{st.circle_y_in}}" x2="${{st.circle_x_out}}" y2="${{st.circle_y_out}}" stroke="#CBD5E1" stroke-width="1.3" stroke-dasharray="2 2" />`;
+
+          // Outer station berth (Southbound)
+          // Terminal: r=8.5 (Canary Yellow, bold obsidian stroke, dark bullseye)
+          // Transfer Hub: r=7.5 (Transit Purple, bold obsidian stroke, white core)
+          // Regular Station: r=6.5 (Porcelain White, bold obsidian stroke, yellow core)
+          const rOut = st.is_terminal ? 8.5 : (st.is_hotspot ? 7.5 : 6.5);
+          const fillOut = st.is_terminal ? '#FFCC00' : (st.is_hotspot ? '#7C3AED' : '#FFFFFF');
+          const strokeWOut = st.is_terminal ? 2.4 : 2.0;
+          const innerCoreROut = st.is_terminal ? 3.2 : (st.is_hotspot ? 2.6 : 2.2);
+          const innerCoreFillOut = st.is_terminal ? '#111215' : (st.is_hotspot ? '#FFFFFF' : '#FFCC00');
+
+          dotsHtml += `
+            <g class="station-node-group" onmouseenter="showStationTooltip(event, ${{i}})" onmouseleave="hideStationTooltip()" onclick="highlightStationDot(${{i}})" style="cursor:pointer;">
+              <circle id="circle-dot-out-${{i}}" cx="${{st.circle_x_out}}" cy="${{st.circle_y_out}}" r="${{rOut}}" fill="${{fillOut}}" stroke="#111215" stroke-width="${{strokeWOut}}" />
+              <circle cx="${{st.circle_x_out}}" cy="${{st.circle_y_out}}" r="${{innerCoreROut}}" fill="${{innerCoreFillOut}}" pointer-events="none" />
+            </g>
+          `;
+
+          // Inner station berth (Northbound)
+          const rIn = st.is_terminal ? 8.5 : (st.is_hotspot ? 7.5 : 6.5);
+          const fillIn = st.is_terminal ? '#FFCC00' : (st.is_hotspot ? '#7C3AED' : '#FFFFFF');
+          const strokeWIn = st.is_terminal ? 2.4 : 2.0;
+          const innerCoreRIn = st.is_terminal ? 3.2 : (st.is_hotspot ? 2.6 : 2.2);
+          const innerCoreFillIn = st.is_terminal ? '#111215' : (st.is_hotspot ? '#FFFFFF' : '#FFCC00');
+
+          dotsHtml += `
+            <g class="station-node-group" onmouseenter="showStationTooltip(event, ${{i}})" onmouseleave="hideStationTooltip()" onclick="highlightStationDot(${{i}})" style="cursor:pointer;">
+              <circle id="circle-dot-in-${{i}}" cx="${{st.circle_x_in}}" cy="${{st.circle_y_in}}" r="${{rIn}}" fill="${{fillIn}}" stroke="#111215" stroke-width="${{strokeWIn}}" />
+              <circle cx="${{st.circle_x_in}}" cy="${{st.circle_y_in}}" r="${{innerCoreRIn}}" fill="${{innerCoreFillIn}}" pointer-events="none" />
+            </g>
+          `;
+
+          // Perimeter label for key stations
+          const keyStationIndices = [0, 2, 4, 5, 8, 11, 13, 14, 15, 16, 18, 20, 23];
+          if (keyStationIndices.includes(i)) {{
+            const rLbl = 139.0;
+            const lx = round(270.0 + rLbl * Math.cos(st.theta), 1);
+            const ly = round(160.0 + rLbl * Math.sin(st.theta), 1);
+            const cosVal = Math.cos(st.theta);
+            const anchor = cosVal > 0.3 ? "start" : (cosVal < -0.3 ? "end" : "middle");
+            const shortName = st.name.replace(' (Roosevelt)', '').replace(' (Cubao)', '').replace(' (Ayala)', '').replace('Parañaque Integrated Terminal Exchange ', '').replace(' (MOA)', '');
+            labelsHtml += `<text x="${{lx}}" y="${{ly + 3}}" font-size="7.5" font-weight="800" fill="#27272A" text-anchor="${{anchor}}">${{shortName}}</text>`;
+          }}
+        }});
+
+        circleSpokes.innerHTML = spokesHtml;
+        circleStLayer.innerHTML = dotsHtml;
+        circleLblLayer.innerHTML = labelsHtml;
+      }}
+
+      // 2. Fixed Route Map View (Enlarged with Distinctive Badges)
+      const routeLayer = document.getElementById('station-dots-layer');
+      if (routeLayer) {{
+        let html = '';
+        stationDefs.forEach((st, i) => {{
+          const r = st.is_terminal ? 10.5 : (st.is_hotspot ? 8.8 : 7.5);
+          const fill = st.is_terminal ? '#FFCC00' : (st.is_hotspot ? '#7C3AED' : '#FFFFFF');
+          const strokeW = st.is_terminal ? 2.8 : (st.is_hotspot ? 2.4 : 2.2);
+          const innerR = st.is_terminal ? 4.2 : (st.is_hotspot ? 3.0 : 2.6);
+          const innerFill = st.is_terminal ? '#111215' : (st.is_hotspot ? '#FFFFFF' : '#FFCC00');
+
+          html += `
+            <g class="station-node-group" onmouseenter="showStationTooltip(event, ${{i}})" onmouseleave="hideStationTooltip()" onclick="highlightStationDot(${{i}})" style="cursor:pointer;">
+              <circle id="dot-${{i}}" cx="${{st.x}}" cy="${{st.y}}" r="${{r}}" fill="${{fill}}" stroke="#111215" stroke-width="${{strokeW}}" />
+              <circle cx="${{st.x}}" cy="${{st.y}}" r="${{innerR}}" fill="${{innerFill}}" pointer-events="none" />
+              ${{st.is_terminal ? `<circle cx="${{st.x}}" cy="${{st.y}}" r="1.6" fill="#FFFFFF" pointer-events="none" />` : ''}}
+            </g>
+          `;
+        }});
+        routeLayer.innerHTML = html;
+      }}
     }}
 
-    // Build 24-Station Checklist based on current rotation (Southbound or Northbound)
+    function round(val, dec = 1) {{
+      const factor = Math.pow(10, dec);
+      return Math.round(val * factor) / factor;
+    }}
+
+    // Build 24-Station Checklist with Transit Wayfinding Signage Design
     function initChecklist() {{
       const list = document.getElementById('timeline-checkpoint-list');
       if (!list) return;
@@ -1249,13 +1720,25 @@ def main():
       orderedIndices.forEach((stIdx, displaySeq) => {{
         const st = stationDefs[stIdx];
         const badgeClass = st.is_terminal ? 'terminal' : (st.is_hotspot ? 'hotspot' : '');
-        const seqNum = displaySeq + 1;
+        const iconClass = st.is_terminal ? '' : (st.is_hotspot ? 'purple' : 'blue');
+        const seqNum = String(displaySeq + 1).padStart(2, '0');
+        
         html += `
-          <div class="station-row" id="chk-item-${{stIdx}}" onclick="highlightStationDot(${{stIdx}})" data-tooltip-title="${{st.name}}" data-tooltip="Station Platform: ${{st.platform}} | Capacity: ${{st.berths}} Simultaneous Berths">
+          <div class="station-row" id="chk-item-${{stIdx}}" onclick="highlightStationDot(${{stIdx}})" data-tooltip-title="${{st.name}}" data-tooltip="Station Code: ${{st.code}} | Platform: ${{st.platform}} | Capacity: ${{st.berths}} Berths">
             <div class="station-left">
-              <div class="st-dot-badge ${{badgeClass}}">${{seqNum}}</div>
+              <div class="signage-badge ${{badgeClass}}">${{seqNum}}</div>
+              <div class="signage-icon-box ${{iconClass}}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="4" y="3" width="16" height="16" rx="2"/>
+                  <circle cx="8" cy="15" r="1.5" fill="#111215"/>
+                  <circle cx="16" cy="15" r="1.5" fill="#111215"/>
+                </svg>
+              </div>
               <div>
-                <div class="st-name">${{st.name}}</div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span class="st-name">${{st.name}}</span>
+                  <span class="station-code-pill">${{st.code}}</span>
+                </div>
                 <div class="st-sub" id="chk-sub-${{stIdx}}">${{st.berths}} Berths | ${{st.platform}}</div>
               </div>
             </div>
@@ -1268,17 +1751,28 @@ def main():
 
     function highlightStationDot(idx) {{
       const dot = document.getElementById('dot-' + idx);
-      if (dot) {{
-        dot.setAttribute('r', '9');
-        setTimeout(() => {{
-          const st = stationDefs[idx];
-          dot.setAttribute('r', st.is_terminal ? '5.5' : (st.is_hotspot ? '5.0' : '4.0'));
-        }}, 800);
-      }}
+      const cDotOut = document.getElementById('circle-dot-out-' + idx);
+      const cDotIn = document.getElementById('circle-dot-in-' + idx);
+      const st = stationDefs[idx];
+
+      [dot, cDotOut, cDotIn].forEach(d => {{
+        if (d) {{
+          d.setAttribute('r', '13.5');
+          setTimeout(() => {{
+            const baseR = (d === dot)
+              ? (st.is_terminal ? '10.5' : (st.is_hotspot ? '8.8' : '7.5'))
+              : (st.is_terminal ? '8.5' : (st.is_hotspot ? '7.5' : '6.5'));
+            d.setAttribute('r', baseR);
+          }}, 800);
+        }}
+      }});
     }}
 
     function showStationTooltip(e, idx) {{
       const tip = document.getElementById('map-tooltip');
+      const container = document.getElementById('map-container-el');
+      if (!tip || !container) return;
+      const rect = container.getBoundingClientRect();
       const st = stationDefs[idx];
       const snap = snapshots[currentIndex];
       const stData = snap?.stations[st.name] || {{ pax_q_total: 0, pax_q_forward: 0, pax_q_reverse: 0, buses_queuing: 0, avg_delay_min: 0, has_rogue_bus: false }};
@@ -1286,14 +1780,20 @@ def main():
       const rogueTag = stData.has_rogue_bus ? '<br><span style="color:#EA580C; font-weight:700;">[Rogue Bus Lingering]</span>' : '';
 
       tip.innerHTML = `
-        <strong>${{st.name}}</strong><br>
+        <div style="color:#FFCC00; font-weight:800; font-size:0.78rem;">${{st.code}} • ${{st.name}}</div>
         Type: ${{st.platform}} (${{st.berths}} berths)<br>
         SB Waiting: ${{stData.pax_q_forward || 0}} | NB Waiting: ${{stData.pax_q_reverse || 0}}<br>
         Buses Queued: ${{stData.buses_queuing || 0}} (${{stData.avg_delay_min || 0}}m delay)
         ${{rogueTag}}
       `;
-      tip.style.left = (e.offsetX + 15) + 'px';
-      tip.style.top = (e.offsetY - 20) + 'px';
+
+      let tipX = e.clientX - rect.left + 15;
+      let tipY = e.clientY - rect.top - 20;
+      if (tipX + 220 > rect.width) tipX = e.clientX - rect.left - 220;
+      if (tipY < 10) tipY = 10;
+
+      tip.style.left = tipX + 'px';
+      tip.style.top = tipY + 'px';
       tip.style.display = 'block';
     }}
 
@@ -1448,42 +1948,63 @@ def main():
       if (hasRogue && rogueStation) {{
         chipStation.innerText = `[${{laneTag}}] Rogue Bus: ${{rogueStation}}`;
         chipQueue.innerText = `Lingering to fill up | ${{maxBusQueue}} buses queued`;
-        chipQueue.style.color = "var(--accent-orange)";
-        if (chipDot) chipDot.style.background = "var(--accent-orange)";
+        chipQueue.style.color = "var(--signage-yellow)";
+        if (chipDot) chipDot.style.background = "var(--signage-orange)";
       }} else if (maxBusQueue > 2 && worstStationName) {{
         chipStation.innerText = `[${{laneTag}}] Chokepoint: ${{worstStationName}}`;
         chipQueue.innerText = `${{maxBusQueue}} buses queued (~${{maxBusQueue * 12}}m backup)`;
-        chipQueue.style.color = "var(--accent-orange)";
-        if (chipDot) chipDot.style.background = "var(--accent-orange)";
+        chipQueue.style.color = "var(--signage-yellow)";
+        if (chipDot) chipDot.style.background = "var(--signage-orange)";
       }} else {{
         chipStation.innerText = `Corridor Flow (${{laneTag}}): Clear`;
         chipQueue.innerText = "No bottlenecks (0-pax free flow)";
-        chipQueue.style.color = "var(--accent-green)";
-        if (chipDot) chipDot.style.background = "var(--accent-green)";
+        chipQueue.style.color = "var(--signage-green)";
+        if (chipDot) chipDot.style.background = "var(--signage-green)";
       }}
 
-      // Dynamic Beacon Ripple on SVG map (placed at active chokepoint)
+      // Dynamic Beacon Ripple on SVG maps (Circle View & Route View)
       const beaconGroup = document.getElementById('dynamic-beacon-group');
       const beaconRing = document.getElementById('beacon-ring');
       const beaconMid = document.getElementById('beacon-mid');
       const beaconCore = document.getElementById('beacon-core');
 
+      const circleBeaconGroup = document.getElementById('circle-beacon-group');
+      const circleBeaconRing = document.getElementById('circle-beacon-ring');
+      const circleBeaconMid = document.getElementById('circle-beacon-mid');
+      const circleBeaconCore = document.getElementById('circle-beacon-core');
+
       if ((hasRogue || maxBusQueue > 2) && worstStationName) {{
         const stNode = stationDefs.find(s => s.name === worstStationName);
-        if (stNode && beaconGroup) {{
-          beaconGroup.style.display = 'block';
-          beaconRing.setAttribute('cx', stNode.x);
-          beaconRing.setAttribute('cy', stNode.y);
-          beaconMid.setAttribute('cx', stNode.x);
-          beaconMid.setAttribute('cy', stNode.y);
-          beaconCore.setAttribute('cx', stNode.x);
-          beaconCore.setAttribute('cy', stNode.y);
+        if (stNode) {{
+          // Update Route Map Beacon
+          if (beaconGroup) {{
+            beaconGroup.style.display = 'block';
+            beaconRing.setAttribute('cx', stNode.x);
+            beaconRing.setAttribute('cy', stNode.y);
+            beaconMid.setAttribute('cx', stNode.x);
+            beaconMid.setAttribute('cy', stNode.y);
+            beaconCore.setAttribute('cx', stNode.x);
+            beaconCore.setAttribute('cy', stNode.y);
+            beaconCore.setAttribute('fill', hasRogue ? '#EA580C' : (isSB ? '#EA580C' : '#0284C7'));
+          }}
 
-          const bColor = hasRogue ? '#EA580C' : (isSB ? '#EA580C' : '#0284C7');
-          beaconCore.setAttribute('fill', bColor);
+          // Update Concentric Circles Beacon
+          if (circleBeaconGroup) {{
+            circleBeaconGroup.style.display = 'block';
+            const cx = isSB ? stNode.circle_x_out : stNode.circle_x_in;
+            const cy = isSB ? stNode.circle_y_out : stNode.circle_y_in;
+            circleBeaconRing.setAttribute('cx', cx);
+            circleBeaconRing.setAttribute('cy', cy);
+            circleBeaconMid.setAttribute('cx', cx);
+            circleBeaconMid.setAttribute('cy', cy);
+            circleBeaconCore.setAttribute('cx', cx);
+            circleBeaconCore.setAttribute('cy', cy);
+            circleBeaconCore.setAttribute('fill', hasRogue ? '#EA580C' : (isSB ? '#EA580C' : '#0284C7'));
+          }}
         }}
-      }} else if (beaconGroup) {{
-        beaconGroup.style.display = 'none';
+      }} else {{
+        if (beaconGroup) beaconGroup.style.display = 'none';
+        if (circleBeaconGroup) circleBeaconGroup.style.display = 'none';
       }}
 
       // Dynamic Cycle Time estimate
@@ -1526,11 +2047,11 @@ def main():
 
         if (subEl) {{
           if (dirRogue) {{
-            subEl.innerHTML = `<span style="color:#EA580C; font-weight:700;">[Rogue Bus Lingering]</span> | ${{dirPax}} pax in line`;
+            subEl.innerHTML = `<span style="color:#EA580C; font-weight:800;">[Rogue Bus Lingering]</span> | ${{dirPax}} pax in line`;
           }} else if (dirQueue > 2) {{
-            subEl.innerHTML = `<span style="color:#EA580C; font-weight:700;">${{dirQueue}} buses queued (${{dirDelay}}m delay)</span> | ${{dirPax}} pax`;
+            subEl.innerHTML = `<span style="color:#EA580C; font-weight:800;">${{dirQueue}} buses queued (${{dirDelay}}m delay)</span> | ${{dirPax}} pax`;
           }} else if (dirPax === 0) {{
-            subEl.innerHTML = `<span style="color:var(--accent-green); font-weight:600;">Free Flow (0 pax)</span> | ${{st.berths}} berths`;
+            subEl.innerHTML = `<span style="color:var(--signage-green); font-weight:700;">Free Flow (0 pax)</span> | ${{st.berths}} berths`;
           }} else {{
             subEl.innerText = `${{dirPax}} waiting pax (${{dirLabel}}) | ${{st.berths}} berths`;
             subEl.style.color = 'var(--text-muted)';
@@ -1549,100 +2070,137 @@ def main():
         }}
       }});
 
-      // Render Dynamic Moving Buses for both directions
+      // Render Dynamic Moving Buses for both Concentric Circles & Route Map
       updateBusLayer(snap, idx);
     }}
 
     function updateBusLayer(snap, idx) {{
-      const busLayer = document.getElementById('bus-layer');
-      if (!busLayer) return;
-      const pathEl = document.getElementById('route-path');
-      if (!pathEl) return;
-      const totalLen = pathEl.getTotalLength();
+      const numBusesPerDir = 12;
+      const nSteps = Math.max(1, snapshots.length);
+      const frac = idx / nSteps;
 
-      let chokeDistSB = -1;
-      let chokeDistNB = -1;
-      let maxQueueSB = snap.max_bus_queue_sb || 0;
-      let maxQueueNB = snap.max_bus_queue_nb || 0;
+      // Identify choke points
       let rogueSB = snap.has_active_rogue_sb || false;
       let rogueNB = snap.has_active_rogue_nb || false;
+      let maxQueueSB = snap.max_bus_queue_sb || 0;
+      let maxQueueNB = snap.max_bus_queue_nb || 0;
 
-      // Find SB chokepoint position
-      for (const [stName, stData] of Object.entries(snap.stations)) {{
-        if (stData.has_rogue_bus_sb || (stData.buses_queuing_sb && stData.buses_queuing_sb > 2)) {{
-          const stIdx = stationDefs.findIndex(s => s.name === stName);
-          if (stIdx >= 0) {{
-            chokeDistSB = totalLen * (stIdx / (stationDefs.length - 1));
-            maxQueueSB = Math.max(maxQueueSB, stData.buses_queuing_sb || 0);
-            if (stData.has_rogue_bus_sb) rogueSB = true;
-            break;
+      // ─────────────────────────────────────────────────────────────
+      // A. CONCENTRIC RINGS BUS LAYER
+      // ─────────────────────────────────────────────────────────────
+      const circleBusLayer = document.getElementById('circle-bus-layer');
+      if (circleBusLayer) {{
+        let circleBusHtml = '';
+        const cx = 270.0;
+        const cy = 160.0;
+        const rOut = {r_outer}; // 115px (Outer circle - Southbound)
+        const rIn = {r_inner};   // 85px (Inner circle - Northbound)
+
+        // 1. Southbound Buses on Outer Circle (CLOCKWISE ↻)
+        for (let i = 0; i < numBusesPerDir; i++) {{
+          const busOffset = ((i / numBusesPerDir) + (frac * 2.2)) % 1.0;
+          const theta = -Math.PI / 2.0 + (busOffset * 2.0 * Math.PI); // Clockwise
+          const bx = round(cx + rOut * Math.cos(theta), 1);
+          const by = round(cy + rOut * Math.sin(theta), 1);
+
+          const dotColor = (rogueSB && i === 0) ? '#EA580C' : '#2563EB';
+          circleBusHtml += `<circle cx="${{bx}}" cy="${{by}}" r="3.4" fill="${{dotColor}}" stroke="#111215" stroke-width="1.2" />`;
+        }}
+
+        // 2. Northbound Buses on Inner Circle (COUNTER-CLOCKWISE ↺)
+        for (let j = 0; j < numBusesPerDir; j++) {{
+          const busOffset = ((j / numBusesPerDir) + (frac * 2.2)) % 1.0;
+          const theta = -Math.PI / 2.0 - (busOffset * 2.0 * Math.PI); // Counter-Clockwise
+          const bx = round(cx + rIn * Math.cos(theta), 1);
+          const by = round(cy + rIn * Math.sin(theta), 1);
+
+          const dotColor = (rogueNB && j === 0) ? '#EA580C' : '#0284C7';
+          circleBusHtml += `<circle cx="${{bx}}" cy="${{by}}" r="3.4" fill="${{dotColor}}" stroke="#111215" stroke-width="1.2" />`;
+        }}
+
+        circleBusLayer.innerHTML = circleBusHtml;
+      }}
+
+      // ─────────────────────────────────────────────────────────────
+      // B. ROUTE MAP BUS LAYER
+      // ─────────────────────────────────────────────────────────────
+      const busLayer = document.getElementById('bus-layer');
+      const pathEl = document.getElementById('route-path');
+      if (busLayer && pathEl) {{
+        const totalLen = pathEl.getTotalLength();
+        let chokeDistSB = -1;
+        let chokeDistNB = -1;
+
+        for (const [stName, stData] of Object.entries(snap.stations)) {{
+          if (stData.has_rogue_bus_sb || (stData.buses_queuing_sb && stData.buses_queuing_sb > 2)) {{
+            const stIdx = stationDefs.findIndex(s => s.name === stName);
+            if (stIdx >= 0) {{
+              chokeDistSB = totalLen * (stIdx / (stationDefs.length - 1));
+              break;
+            }}
           }}
         }}
-      }}
 
-      // Find NB chokepoint position
-      for (const [stName, stData] of Object.entries(snap.stations)) {{
-        if (stData.has_rogue_bus_nb || (stData.buses_queuing_nb && stData.buses_queuing_nb > 2)) {{
-          const stIdx = stationDefs.findIndex(s => s.name === stName);
-          if (stIdx >= 0) {{
-            chokeDistNB = totalLen * (stIdx / (stationDefs.length - 1));
-            maxQueueNB = Math.max(maxQueueNB, stData.buses_queuing_nb || 0);
-            if (stData.has_rogue_bus_nb) rogueNB = true;
-            break;
+        for (const [stName, stData] of Object.entries(snap.stations)) {{
+          if (stData.has_rogue_bus_nb || (stData.buses_queuing_nb && stData.buses_queuing_nb > 2)) {{
+            const stIdx = stationDefs.findIndex(s => s.name === stName);
+            if (stIdx >= 0) {{
+              chokeDistNB = totalLen * (stIdx / (stationDefs.length - 1));
+              break;
+            }}
           }}
         }}
-      }}
 
-      let html = '';
-      const numBusesPerDir = 12;
+        let routeBusHtml = '';
 
-      // 1. Southbound Buses (Monumento -> PITX)
-      for (let i = 0; i < numBusesPerDir; i++) {{
-        const offset = ((i / numBusesPerDir) + (idx / Math.max(1, snapshots.length)) * 2.2) % 1.0;
-        const dist = offset * totalLen;
-        if (chokeDistSB >= 0 && maxQueueSB > 2 && Math.abs(dist - chokeDistSB) < 14) continue;
+        // Southbound Buses along Route
+        for (let i = 0; i < numBusesPerDir; i++) {{
+          const offset = ((i / numBusesPerDir) + (frac * 2.2)) % 1.0;
+          const dist = offset * totalLen;
+          if (chokeDistSB >= 0 && maxQueueSB > 2 && Math.abs(dist - chokeDistSB) < 14) continue;
 
-        const pt = pathEl.getPointAtLength(dist);
-        html += `<circle cx="${{(pt.x - 1.5).toFixed(1)}}" cy="${{(pt.y - 1.5).toFixed(1)}}" r="4.2" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.3" />`;
-      }}
-
-      // 2. Northbound Buses (PITX -> Monumento)
-      for (let i = 0; i < numBusesPerDir; i++) {{
-        const offset = (1.0 - ((i / numBusesPerDir) + (idx / Math.max(1, snapshots.length)) * 2.2) % 1.0) % 1.0;
-        const dist = offset * totalLen;
-        if (chokeDistNB >= 0 && maxQueueNB > 2 && Math.abs(dist - chokeDistNB) < 14) continue;
-
-        const pt = pathEl.getPointAtLength(dist);
-        html += `<circle cx="${{(pt.x + 1.5).toFixed(1)}}" cy="${{(pt.y + 1.5).toFixed(1)}}" r="4.2" fill="#0284C7" stroke="#FFFFFF" stroke-width="1.3" />`;
-      }}
-
-      // 3. Queued Bus Stack in Southbound Lane
-      if (chokeDistSB >= 0 && (maxQueueSB > 0 || rogueSB)) {{
-        const qCount = Math.min(8, Math.max(rogueSB ? 2 : 1, Math.ceil(maxQueueSB / 4)));
-        for (let q = 1; q <= qCount; q++) {{
-          const qDist = Math.max(0, chokeDistSB - (q * 7));
-          const qPt = pathEl.getPointAtLength(qDist);
-          const dotColor = rogueSB && q === 1 ? '#EA580C' : '#F97316';
-          html += `<circle cx="${{(qPt.x - 1.5).toFixed(1)}}" cy="${{(qPt.y - 1.5).toFixed(1)}}" r="5" fill="${{dotColor}}" stroke="#FFFFFF" stroke-width="1.5">
-                     <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-                   </circle>`;
+          const pt = pathEl.getPointAtLength(dist);
+          routeBusHtml += `<circle cx="${{(pt.x - 1.5).toFixed(1)}}" cy="${{(pt.y - 1.5).toFixed(1)}}" r="3.8" fill="#2563EB" stroke="#111215" stroke-width="1.2" />`;
         }}
-      }}
 
-      // 4. Queued Bus Stack in Northbound Lane
-      if (chokeDistNB >= 0 && (maxQueueNB > 0 || rogueNB)) {{
-        const qCount = Math.min(8, Math.max(rogueNB ? 2 : 1, Math.ceil(maxQueueNB / 4)));
-        for (let q = 1; q <= qCount; q++) {{
-          const qDist = Math.min(totalLen, chokeDistNB + (q * 7));
-          const qPt = pathEl.getPointAtLength(qDist);
-          const dotColor = rogueNB && q === 1 ? '#EA580C' : '#0284C7';
-          html += `<circle cx="${{(qPt.x + 1.5).toFixed(1)}}" cy="${{(qPt.y + 1.5).toFixed(1)}}" r="5" fill="${{dotColor}}" stroke="#FFFFFF" stroke-width="1.5">
-                     <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-                   </circle>`;
+        // Northbound Buses along Route
+        for (let i = 0; i < numBusesPerDir; i++) {{
+          const offset = (1.0 - ((i / numBusesPerDir) + (frac * 2.2)) % 1.0) % 1.0;
+          const dist = offset * totalLen;
+          if (chokeDistNB >= 0 && maxQueueNB > 2 && Math.abs(dist - chokeDistNB) < 14) continue;
+
+          const pt = pathEl.getPointAtLength(dist);
+          routeBusHtml += `<circle cx="${{(pt.x + 1.5).toFixed(1)}}" cy="${{(pt.y + 1.5).toFixed(1)}}" r="3.8" fill="#0284C7" stroke="#111215" stroke-width="1.2" />`;
         }}
-      }}
 
-      busLayer.innerHTML = html;
+        // Queued Stack SB
+        if (chokeDistSB >= 0 && (maxQueueSB > 0 || rogueSB)) {{
+          const qCount = Math.min(6, Math.max(rogueSB ? 2 : 1, Math.ceil(maxQueueSB / 4)));
+          for (let q = 1; q <= qCount; q++) {{
+            const qDist = Math.max(0, chokeDistSB - (q * 7));
+            const qPt = pathEl.getPointAtLength(qDist);
+            const dotColor = rogueSB && q === 1 ? '#EA580C' : '#F97316';
+            routeBusHtml += `<circle cx="${{(qPt.x - 1.5).toFixed(1)}}" cy="${{(qPt.y - 1.5).toFixed(1)}}" r="4.5" fill="${{dotColor}}" stroke="#FFFFFF" stroke-width="1.4">
+                               <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+                             </circle>`;
+          }}
+        }}
+
+        // Queued Stack NB
+        if (chokeDistNB >= 0 && (maxQueueNB > 0 || rogueNB)) {{
+          const qCount = Math.min(6, Math.max(rogueNB ? 2 : 1, Math.ceil(maxQueueNB / 4)));
+          for (let q = 1; q <= qCount; q++) {{
+            const qDist = Math.min(totalLen, chokeDistNB + (q * 7));
+            const qPt = pathEl.getPointAtLength(qDist);
+            const dotColor = rogueNB && q === 1 ? '#EA580C' : '#0284C7';
+            routeBusHtml += `<circle cx="${{(qPt.x + 1.5).toFixed(1)}}" cy="${{(qPt.y + 1.5).toFixed(1)}}" r="4.5" fill="${{dotColor}}" stroke="#FFFFFF" stroke-width="1.4">
+                               <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+                             </circle>`;
+          }}
+        }}
+
+        busLayer.innerHTML = routeBusHtml;
+      }}
     }}
 
     function switchPreset(key) {{
@@ -1824,12 +2382,91 @@ def main():
       }}
     }}
 
+    // Zoom and Pan Handlers (Mouse Wheel + Click & Drag + Touch)
+    function initMapZoomPan() {{
+      const container = document.getElementById('map-container-el');
+      if (!container) return;
+
+      // Mouse Wheel Zoom
+      container.addEventListener('wheel', (e) => {{
+        e.preventDefault();
+        const cam = mapCameras[currentVisualMode];
+        const factor = e.deltaY < 0 ? 1.15 : (1 / 1.15);
+        const newScale = Math.min(4.5, Math.max(0.6, cam.scale * factor));
+        cam.scale = Math.round(newScale * 100) / 100;
+        applyCamera();
+      }}, {{ passive: false }});
+
+      // Mouse Drag Panning
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let startCamX = 0;
+      let startCamY = 0;
+
+      container.addEventListener('mousedown', (e) => {{
+        if (e.target.closest('.map-zoom-controls') || e.target.closest('#map-tooltip')) return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        const cam = mapCameras[currentVisualMode];
+        startCamX = cam.x;
+        startCamY = cam.y;
+        container.style.cursor = 'grabbing';
+      }});
+
+      window.addEventListener('mousemove', (e) => {{
+        if (!isDragging) return;
+        const cam = mapCameras[currentVisualMode];
+        const dx = (e.clientX - startX) * (1 / cam.scale);
+        const dy = (e.clientY - startY) * (1 / cam.scale);
+        cam.x = startCamX + dx;
+        cam.y = startCamY + dy;
+        applyCamera();
+      }});
+
+      window.addEventListener('mouseup', () => {{
+        if (isDragging) {{
+          isDragging = false;
+          container.style.cursor = 'grab';
+        }}
+      }});
+
+      // Touch Support
+      let touchStartX = 0;
+      let touchStartY = 0;
+      container.addEventListener('touchstart', (e) => {{
+        if (e.touches.length === 1) {{
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          const cam = mapCameras[currentVisualMode];
+          startCamX = cam.x;
+          startCamY = cam.y;
+        }}
+      }}, {{ passive: true }});
+
+      container.addEventListener('touchmove', (e) => {{
+        if (e.touches.length === 1) {{
+          const cam = mapCameras[currentVisualMode];
+          const dx = (e.touches[0].clientX - touchStartX) * (1 / cam.scale);
+          const dy = (e.touches[0].clientY - touchStartY) * (1 / cam.scale);
+          cam.x = startCamX + dx;
+          cam.y = startCamY + dy;
+          applyCamera();
+        }}
+      }}, {{ passive: true }});
+
+      // Initialize camera view
+      applyCamera();
+    }}
+
     // Initial load
     initVariableTooltips();
     initStationDots();
     initChecklist();
     drawPaxChart();
     renderSnapshot(0);
+    initMapZoomPan();
   </script>
 </body>
 </html>
