@@ -392,8 +392,8 @@ def main():
       background: #FEFCE8;
     }}
     .bento-pink {{
-      border-left: 5px solid #DB2777;
-      background: #FDF2F8;
+      border-left: 5px solid #3F3F46;
+      background: #FAFAFA;
     }}
     .bento-green {{
       border-left: 5px solid var(--signage-green);
@@ -479,8 +479,60 @@ def main():
     .demand-chart-box {{
       position: relative;
       width: 100%;
-      height: 52px;
-      margin-top: 8px;
+      height: 56px;
+      margin-top: 6px;
+    }}
+    .chart-breakdown-tags {{
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }}
+    .trend-tag {{
+      padding: 1px 5px;
+      border-radius: 3px;
+    }}
+    .trend-tag.cum {{
+      color: #18181B;
+      background: rgba(24, 24, 27, 0.08);
+    }}
+    .trend-tag.sb {{
+      color: #1D4ED8;
+      background: rgba(37, 99, 235, 0.12);
+    }}
+    .trend-tag.nb {{
+      color: #0369A1;
+      background: rgba(2, 132, 199, 0.12);
+    }}
+    .trend-chart-legend {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .legend-dot-label {{
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }}
+    .legend-line {{
+      display: inline-block;
+      width: 9px;
+      height: 2.5px;
+      border-radius: 1px;
+    }}
+    .legend-line.cum {{
+      background: #18181B;
+    }}
+    .legend-line.sb {{
+      background: #2563EB;
+    }}
+    .legend-line.nb {{
+      background: #0284C7;
     }}
 
     /* Row 2: Main Workspace Grid (Checkpoints + Map) */
@@ -1475,34 +1527,47 @@ def main():
           </div>
         </div>
 
-        <!-- Card 2: Demand Trend Line Chart -->
+        <!-- Card 2: Demand Trend Line Chart (NB, SB, and Cumulative) -->
         <div class="bento-card bento-pink">
           <div class="bento-top">
-            <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Total platform waiting passengers fluctuating over time across the simulation window.">
+            <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Corridor passenger waiting demand over time split by Southbound (SB), Northbound (NB), and Cumulative total.">
               Demand Trend
             </span>
-            <span id="chart-live-val" style="font-size:1.05rem; font-weight:800; font-family:monospace; color:#831843;">4,839 pax</span>
+            <div class="chart-breakdown-tags">
+              <span class="trend-tag cum" title="Cumulative Total Waiting Passengers">Total: <strong id="chart-live-cum">4,839</strong></span>
+              <span class="trend-tag sb" title="Southbound Waiting Passengers"><strong id="chart-live-sb">SB: 2,640</strong></span>
+              <span class="trend-tag nb" title="Northbound Waiting Passengers"><strong id="chart-live-nb">NB: 2,199</strong></span>
+            </div>
           </div>
           
           <div class="demand-chart-box">
-            <svg id="pax-trend-svg" width="100%" height="100%" viewBox="0 0 240 55" preserveAspectRatio="none">
+            <svg id="pax-trend-svg" width="100%" height="100%" viewBox="0 0 240 60" preserveAspectRatio="none">
               <defs>
-                <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#DB2777" stop-opacity="0.30"/>
-                  <stop offset="100%" stop-color="#DB2777" stop-opacity="0.0"/>
+                <linearGradient id="cumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#18181B" stop-opacity="0.08"/>
+                  <stop offset="100%" stop-color="#18181B" stop-opacity="0.0"/>
                 </linearGradient>
               </defs>
-              <path id="pax-area-path" fill="url(#pinkGrad)" d=""/>
-              <path id="pax-line-path" fill="none" stroke="#DB2777" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
+              <path id="pax-area-path" fill="url(#cumGrad)" d=""/>
+              <path id="pax-line-sb" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d=""/>
+              <path id="pax-line-nb" fill="none" stroke="#0284C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d=""/>
+              <path id="pax-line-cum" fill="none" stroke="#18181B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
               <!-- Peak Marker Layer: Only peak labeled, NO vertical line -->
               <g id="peak-marker-group"></g>
-              <circle id="chart-cursor-dot" cx="0" cy="0" r="3.5" fill="#831843" stroke="#FFFFFF" stroke-width="1.2" style="display:none;"/>
+              <!-- Live Time Cursor Dots for all 3 series -->
+              <circle id="chart-cursor-sb" cx="0" cy="0" r="2.8" fill="#2563EB" stroke="#FFFFFF" stroke-width="1" style="display:none;"/>
+              <circle id="chart-cursor-nb" cx="0" cy="0" r="2.8" fill="#0284C7" stroke="#FFFFFF" stroke-width="1" style="display:none;"/>
+              <circle id="chart-cursor-cum" cx="0" cy="0" r="3.4" fill="#18181B" stroke="#FFFFFF" stroke-width="1.2" style="display:none;"/>
             </svg>
           </div>
 
-          <div style="display:flex; justify-content:space-between; font-size:0.68rem; font-weight:800; opacity:0.8; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; font-weight:800; opacity:0.85; margin-top:4px;">
             <span id="chart-time-start">08:00 AM</span>
-            <span id="chart-time-mid">09:30 AM</span>
+            <div class="trend-chart-legend">
+              <span class="legend-dot-label"><span class="legend-line cum"></span> Total</span>
+              <span class="legend-dot-label"><span class="legend-line sb"></span> SB</span>
+              <span class="legend-dot-label"><span class="legend-line nb"></span> NB</span>
+            </div>
             <span id="chart-time-end">11:00 AM</span>
           </div>
         </div>
@@ -1959,60 +2024,102 @@ def main():
     function drawPaxChart() {{
       if (!snapshots || snapshots.length === 0) return;
       const svgW = 240;
-      const svgH = 55;
-      const padTop = 15;
-      const padBottom = 5;
+      const svgH = 60;
+      const padTop = 16;
+      const padBottom = 6;
       const chartH = svgH - padTop - padBottom;
 
-      const paxes = snapshots.map(s => s.total_waiting_pax || 0);
-      let minVal = Math.min(...paxes);
-      let maxVal = Math.max(...paxes);
-      if (maxVal === minVal) {{ maxVal = minVal + 1; }}
+      const n = snapshots.length;
+      const cumSeries = [];
+      const sbSeries = [];
+      const nbSeries = [];
 
-      // Find the peak index and value (ONLY the peak is labeled)
+      for (let i = 0; i < n; i++) {{
+        const s = snapshots[i];
+        let sb = 0;
+        let nb = 0;
+        if (s.stations) {{
+          for (const st of Object.values(s.stations)) {{
+            sb += (st.pax_q_forward !== undefined ? st.pax_q_forward : Math.round((st.pax_q_total || 0) * 0.55));
+            nb += (st.pax_q_reverse !== undefined ? st.pax_q_reverse : Math.round((st.pax_q_total || 0) * 0.45));
+          }}
+        }}
+        const cum = s.total_waiting_pax !== undefined ? s.total_waiting_pax : (sb + nb);
+        cumSeries.push(cum);
+        sbSeries.push(sb);
+        nbSeries.push(nb);
+      }}
+
+      // Shared vertical scale: baseline at 0 to highest cumulative peak
+      const maxVal = Math.max(...cumSeries, 1);
+      const minVal = 0;
+
+      // Find peak index and value for cumulative
       let peakIdx = 0;
       let peakVal = -1;
-      for (let i = 0; i < paxes.length; i++) {{
-        if (paxes[i] > peakVal) {{
-          peakVal = paxes[i];
+      for (let i = 0; i < n; i++) {{
+        if (cumSeries[i] > peakVal) {{
+          peakVal = cumSeries[i];
           peakIdx = i;
         }}
       }}
 
-      const pts = [];
-      const n = snapshots.length;
+      const ptsCum = [];
+      const ptsSB = [];
+      const ptsNB = [];
+
       for (let i = 0; i < n; i++) {{
-        const x = (i / Math.max(1, n - 1)) * svgW;
-        const norm = (paxes[i] - minVal) / (maxVal - minVal);
-        const y = (svgH - padBottom) - (norm * chartH);
-        pts.push({{ x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) }});
+        const x = Number(((i / Math.max(1, n - 1)) * svgW).toFixed(1));
+        
+        const normCum = (cumSeries[i] - minVal) / (maxVal - minVal);
+        const yCum = Number(((svgH - padBottom) - (normCum * chartH)).toFixed(1));
+        ptsCum.push({{ x, y: yCum, val: cumSeries[i] }});
+
+        const normSB = (sbSeries[i] - minVal) / (maxVal - minVal);
+        const ySB = Number(((svgH - padBottom) - (normSB * chartH)).toFixed(1));
+        ptsSB.push({{ x, y: ySB, val: sbSeries[i] }});
+
+        const normNB = (nbSeries[i] - minVal) / (maxVal - minVal);
+        const yNB = Number(((svgH - padBottom) - (normNB * chartH)).toFixed(1));
+        ptsNB.push({{ x, y: yNB, val: nbSeries[i] }});
       }}
 
-      let lineD = `M ${{pts[0].x}} ${{pts[0].y}}`;
-      for (let i = 1; i < pts.length; i++) {{
-        lineD += ` L ${{pts[i].x}} ${{pts[i].y}}`;
+      // Build SVG paths
+      let dCum = `M ${{ptsCum[0].x}} ${{ptsCum[0].y}}`;
+      let dSB = `M ${{ptsSB[0].x}} ${{ptsSB[0].y}}`;
+      let dNB = `M ${{ptsNB[0].x}} ${{ptsNB[0].y}}`;
+
+      for (let i = 1; i < n; i++) {{
+        dCum += ` L ${{ptsCum[i].x}} ${{ptsCum[i].y}}`;
+        dSB += ` L ${{ptsSB[i].x}} ${{ptsSB[i].y}}`;
+        dNB += ` L ${{ptsNB[i].x}} ${{ptsNB[i].y}}`;
       }}
 
-      const areaD = `${{lineD}} L ${{pts[pts.length - 1].x}} ${{svgH - padBottom}} L ${{pts[0].x}} ${{svgH - padBottom}} Z`;
+      const dArea = `${{dCum}} L ${{ptsCum[n - 1].x}} ${{svgH - padBottom}} L ${{ptsCum[0].x}} ${{svgH - padBottom}} Z`;
 
-      const lineEl = document.getElementById('pax-line-path');
+      const lineCumEl = document.getElementById('pax-line-cum');
+      const lineSBEl = document.getElementById('pax-line-sb');
+      const lineNBEl = document.getElementById('pax-line-nb');
       const areaEl = document.getElementById('pax-area-path');
-      if (lineEl) lineEl.setAttribute('d', lineD);
-      if (areaEl) areaEl.setAttribute('d', areaD);
 
-      // Render Peak Marker and Label (ONLY the peak is labeled, NO vertical line)
+      if (lineCumEl) lineCumEl.setAttribute('d', dCum);
+      if (lineSBEl) lineSBEl.setAttribute('d', dSB);
+      if (lineNBEl) lineNBEl.setAttribute('d', dNB);
+      if (areaEl) areaEl.setAttribute('d', dArea);
+
+      // Render Peak Marker and Label on Cumulative
       const peakGroup = document.getElementById('peak-marker-group');
-      if (peakGroup && pts[peakIdx]) {{
-        const peakPt = pts[peakIdx];
+      if (peakGroup && ptsCum[peakIdx]) {{
+        const peakPt = ptsCum[peakIdx];
         let textX = peakPt.x;
         let anchor = "middle";
-        if (textX < 26) {{ textX = 4; anchor = "start"; }}
-        else if (textX > svgW - 26) {{ textX = svgW - 4; anchor = "end"; }}
+        if (textX < 32) {{ textX = 4; anchor = "start"; }}
+        else if (textX > svgW - 32) {{ textX = svgW - 4; anchor = "end"; }}
 
         peakGroup.innerHTML = `
-          <circle cx="${{peakPt.x}}" cy="${{peakPt.y}}" r="3.2" fill="#831843" stroke="#FFFFFF" stroke-width="1.2" />
-          <text x="${{textX}}" y="${{Math.max(10, peakPt.y - 4)}}" font-size="8.5" font-weight="800" font-family="'Plus Jakarta Sans', sans-serif" text-anchor="${{anchor}}" fill="#831843">
-            ${{peakVal.toLocaleString()}}
+          <circle cx="${{peakPt.x}}" cy="${{peakPt.y}}" r="3.2" fill="#18181B" stroke="#FFFFFF" stroke-width="1.2" />
+          <text x="${{textX}}" y="${{Math.max(10, peakPt.y - 4)}}" font-size="8.5" font-weight="800" font-family="'Plus Jakarta Sans', sans-serif" text-anchor="${{anchor}}" fill="#18181B">
+            ${{peakVal.toLocaleString()}} peak
           </text>
         `;
       }}
@@ -2024,7 +2131,9 @@ def main():
       if (midEl && snapshots[Math.floor(n / 2)]) midEl.innerText = snapshots[Math.floor(n / 2)].time_str;
       if (endEl && snapshots[n - 1]) endEl.innerText = snapshots[n - 1].time_str;
 
-      window._chartPts = pts;
+      window._chartPtsCum = ptsCum;
+      window._chartPtsSB = ptsSB;
+      window._chartPtsNB = ptsNB;
     }}
 
     function renderSnapshot(idx) {{
@@ -2037,19 +2146,38 @@ def main():
       document.getElementById('kpi-fleet').innerHTML = `${{metadata.fleet_size || 100}} <span class="bento-unit">buses</span>`;
 
       // Update Live Demand Trend Chart
-      const chartValEl = document.getElementById('chart-live-val');
-      if (chartValEl) {{
-        chartValEl.innerText = `${{snap.total_waiting_pax.toLocaleString()}} pax`;
-      }}
+      if (window._chartPtsCum && window._chartPtsCum[idx]) {{
+        const ptCum = window._chartPtsCum[idx];
+        const ptSB = window._chartPtsSB[idx];
+        const ptNB = window._chartPtsNB[idx];
 
-      if (window._chartPts && window._chartPts[idx]) {{
-        const pt = window._chartPts[idx];
-        const dot = document.getElementById('chart-cursor-dot');
-        if (dot) {{
-          dot.style.display = 'block';
-          dot.setAttribute('cx', pt.x);
-          dot.setAttribute('cy', pt.y);
+        const dotCum = document.getElementById('chart-cursor-cum');
+        const dotSB = document.getElementById('chart-cursor-sb');
+        const dotNB = document.getElementById('chart-cursor-nb');
+
+        if (dotCum) {{
+          dotCum.style.display = 'block';
+          dotCum.setAttribute('cx', ptCum.x);
+          dotCum.setAttribute('cy', ptCum.y);
         }}
+        if (dotSB) {{
+          dotSB.style.display = 'block';
+          dotSB.setAttribute('cx', ptSB.x);
+          dotSB.setAttribute('cy', ptSB.y);
+        }}
+        if (dotNB) {{
+          dotNB.style.display = 'block';
+          dotNB.setAttribute('cx', ptNB.x);
+          dotNB.setAttribute('cy', ptNB.y);
+        }}
+
+        // Live values in header breakdown
+        const liveCumEl = document.getElementById('chart-live-cum');
+        const liveSbEl = document.getElementById('chart-live-sb');
+        const liveNbEl = document.getElementById('chart-live-nb');
+        if (liveCumEl) liveCumEl.innerText = `${{ptCum.val.toLocaleString()}}`;
+        if (liveSbEl) liveSbEl.innerText = `SB: ${{ptSB.val.toLocaleString()}}`;
+        if (liveNbEl) liveNbEl.innerText = `NB: ${{ptNB.val.toLocaleString()}}`;
       }}
 
       // Directional Split Calculation
