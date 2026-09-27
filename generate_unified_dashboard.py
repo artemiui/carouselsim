@@ -490,21 +490,69 @@ def main():
       font-weight: 700;
       font-variant-numeric: tabular-nums;
     }}
-    .trend-tag {{
-      padding: 1px 5px;
+    .clickable-demand-card {{
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }}
+    .clickable-demand-card:hover {{
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      border-color: #71717A;
+    }}
+    .demand-expand-badge {{
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      background: rgba(24, 24, 27, 0.06);
+      padding: 2px 6px;
       border-radius: 3px;
+      transition: all 0.15s ease;
+      user-select: none;
+    }}
+    .clickable-demand-card:hover .demand-expand-badge {{
+      background: var(--signage-black);
+      color: var(--signage-yellow);
+    }}
+    .trend-tag {{
+      padding: 2px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }}
+    .trend-tag:hover {{
+      transform: translateY(-1px);
     }}
     .trend-tag.cum {{
       color: #18181B;
       background: rgba(24, 24, 27, 0.08);
+      border-color: rgba(24, 24, 27, 0.18);
     }}
     .trend-tag.sb {{
       color: #1D4ED8;
       background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(37, 99, 235, 0.25);
     }}
     .trend-tag.nb {{
       color: #047857;
       background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.25);
+    }}
+    .trend-tag.series-disabled {{
+      opacity: 0.38 !important;
+      background: transparent !important;
+      border-color: #D4D4D8 !important;
+      color: #71717A !important;
+      text-decoration: line-through;
     }}
     .trend-chart-legend {{
       display: flex;
@@ -518,6 +566,19 @@ def main():
       font-size: 0.65rem;
       font-weight: 700;
       color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      padding: 1px 4px;
+      border-radius: 3px;
+      transition: all 0.15s ease;
+    }}
+    .legend-dot-label:hover {{
+      color: var(--text-main);
+      background: rgba(0, 0, 0, 0.04);
+    }}
+    .legend-dot-label.series-disabled {{
+      opacity: 0.35 !important;
+      text-decoration: line-through;
     }}
     .legend-line {{
       display: inline-block;
@@ -1167,6 +1228,139 @@ def main():
       justify-content: flex-end;
       gap: 10px;
     }}
+    .modal-card-wide {{
+      max-width: 880px;
+      width: 95%;
+      padding: 24px 26px;
+    }}
+    .modal-close-btn {{
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      width: 32px;
+      height: 32px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: all 0.15s ease;
+    }}
+    .modal-close-btn:hover {{
+      background: #EDEAE1;
+      color: var(--text-main);
+      border-color: #3F3F46;
+    }}
+    .modal-demand-hud {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      background: #FAF8F2;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+    }}
+    .modal-hud-item {{
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }}
+    .modal-hud-label {{
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }}
+    .modal-hud-val {{
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }}
+    .modal-hud-sub {{
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }}
+    .modal-series-toolbar {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }}
+    .modal-series-pill {{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: var(--radius-sm);
+      font-size: 0.74rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      background: transparent;
+      user-select: none;
+    }}
+    .modal-series-pill:hover {{
+      transform: translateY(-1px);
+    }}
+    .modal-series-pill.cum {{
+      color: #18181B;
+      background: rgba(24, 24, 27, 0.08);
+      border-color: rgba(24, 24, 27, 0.2);
+    }}
+    .modal-series-pill.sb {{
+      color: #1D4ED8;
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(37, 99, 235, 0.25);
+    }}
+    .modal-series-pill.nb {{
+      color: #047857;
+      background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.25);
+    }}
+    .modal-series-pill.series-disabled {{
+      opacity: 0.35 !important;
+      background: transparent !important;
+      border-color: #D4D4D8 !important;
+      color: #71717A !important;
+      text-decoration: line-through;
+    }}
+    .modal-chart-box {{
+      position: relative;
+      width: 100%;
+      height: 280px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: crosshair;
+      user-select: none;
+    }}
+    .modal-chart-tooltip {{
+      position: absolute;
+      display: none;
+      background: var(--signage-black);
+      color: #FFFFFF;
+      padding: 6px 11px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 700;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      border: 1px solid #3F3F46;
+      line-height: 1.4;
+      white-space: nowrap;
+      transform: translate(-50%, -115%);
+    }}
 
     /* Loading Overlay */
     .loading-overlay {{
@@ -1528,15 +1722,21 @@ def main():
         </div>
 
         <!-- Card 2: Demand Trend Line Chart (NB, SB, and Cumulative) -->
-        <div class="bento-card bento-pink">
+        <div class="bento-card bento-pink clickable-demand-card" onclick="openDemandModal()" title="Click to open high-resolution demand trend overlay">
           <div class="bento-top">
-            <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Corridor passenger waiting demand over time split by Southbound (SB), Northbound (NB), and Cumulative total.">
+            <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Corridor passenger waiting demand over time split by Southbound (SB), Northbound (NB), and Cumulative total. Click card to open full-screen overlay, or click pills to toggle graphs.">
               Demand Trend
             </span>
+            <span class="demand-expand-badge" title="Expand high-resolution view">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V2.707l3.146 3.147a.5.5 0 0 0 .708-.708L2.707 2H5.5a.5.5 0 0 0 0-1h-4zm13 0a.5.5 0 0 0-.5.5V5.5a.5.5 0 0 0 1 0V2.707l-3.146 3.147a.5.5 0 0 0 .708.708L14.707 2h2.793a.5.5 0 0 0 0-1h-4zm0 14a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-1 0v2.793l-3.146-3.147a.5.5 0 0 0-.708.708L13.293 14H10.5a.5.5 0 0 0 0 1h4zm-13 0a.5.5 0 0 0 .5-.5v-2.793l3.146-3.147a.5.5 0 0 0-.708-.708L2 13.293V10.5a.5.5 0 0 0-1 0v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H2.707z"/>
+              </svg>
+              EXPAND
+            </span>
             <div class="chart-breakdown-tags">
-              <span class="trend-tag cum" title="Cumulative Total Waiting Passengers">Total: <strong id="chart-live-cum">4,839</strong></span>
-              <span class="trend-tag sb" title="Southbound Waiting Passengers"><strong id="chart-live-sb">SB: 2,640</strong></span>
-              <span class="trend-tag nb" title="Northbound Waiting Passengers"><strong id="chart-live-nb">NB: 2,199</strong></span>
+              <span class="trend-tag cum" id="tag-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle Total Demand">Total: <strong id="chart-live-cum">4,839</strong></span>
+              <span class="trend-tag sb" id="tag-sb" onclick="toggleDemandSeries('sb', event)" title="Click to toggle Southbound Demand"><strong id="chart-live-sb">SB: 2,640</strong></span>
+              <span class="trend-tag nb" id="tag-nb" onclick="toggleDemandSeries('nb', event)" title="Click to toggle Northbound Demand"><strong id="chart-live-nb">NB: 2,199</strong></span>
             </div>
           </div>
           
@@ -1564,9 +1764,9 @@ def main():
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; font-weight:800; opacity:0.85; margin-top:4px;">
             <span id="chart-time-start">08:00 AM</span>
             <div class="trend-chart-legend">
-              <span class="legend-dot-label"><span class="legend-line cum"></span> Total</span>
-              <span class="legend-dot-label"><span class="legend-line sb"></span> SB</span>
-              <span class="legend-dot-label"><span class="legend-line nb"></span> NB</span>
+              <span class="legend-dot-label cum" id="legend-btn-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle Total line"><span class="legend-line cum"></span> Total</span>
+              <span class="legend-dot-label sb" id="legend-btn-sb" onclick="toggleDemandSeries('sb', event)" title="Click to toggle SB line"><span class="legend-line sb"></span> SB</span>
+              <span class="legend-dot-label nb" id="legend-btn-nb" onclick="toggleDemandSeries('nb', event)" title="Click to toggle NB line"><span class="legend-line nb"></span> NB</span>
             </div>
             <span id="chart-time-end">11:00 AM</span>
           </div>
@@ -1695,6 +1895,121 @@ def main():
         <button class="square-btn" onclick="closeModal()">Cancel</button>
         <button class="square-btn yellow" id="btn-submit-sim" onclick="executeCustomSimulation()">
           Run Simulation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expanded Demand Trend High-Resolution Data Overlay Modal -->
+  <div class="modal-backdrop" id="demand-trend-modal" onclick="closeDemandModalOnBackdrop(event)">
+    <div class="modal-card modal-card-wide" onclick="event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h2 class="modal-title" style="margin:0;">Corridor Passenger Demand Trend</h2>
+            <span class="card-square-tag" style="background:#18181B; color:#FFCC00; font-size:0.62rem; font-weight:800; padding:2px 6px; border-radius:3px;">
+              EXPANDED VIEW
+            </span>
+          </div>
+          <div class="modal-sub" style="margin:4px 0 0 0;">
+            High-resolution corridor queue accumulation and directional flow across all 24 EDSA stations. Click or scrub to jump time.
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeDemandModal()" title="Close overlay (Esc)" aria-label="Close modal">
+          &times;
+        </button>
+      </div>
+
+      <!-- Live Stat HUD Ribbon inside Modal -->
+      <div class="modal-demand-hud">
+        <div class="modal-hud-item">
+          <span class="modal-hud-label">Corridor Observation Window</span>
+          <span class="modal-hud-val" id="modal-hud-window">08:00 AM &ndash; 11:00 AM</span>
+        </div>
+        <div class="modal-hud-item">
+          <span class="modal-hud-label">Peak Total Demand</span>
+          <span class="modal-hud-val" id="modal-hud-peak-total">4,839 pax</span>
+        </div>
+        <div class="modal-hud-item">
+          <span class="modal-hud-label">Peak Southbound (SB)</span>
+          <span class="modal-hud-val" style="color:#2563EB;" id="modal-hud-peak-sb">2,640 pax</span>
+        </div>
+        <div class="modal-hud-item">
+          <span class="modal-hud-label">Peak Northbound (NB)</span>
+          <span class="modal-hud-val" style="color:#10B981;" id="modal-hud-peak-nb">2,199 pax</span>
+        </div>
+        <div class="modal-hud-item">
+          <span class="modal-hud-label">Sim Time Demand</span>
+          <span class="modal-hud-val" id="modal-hud-live-total">4,839 pax</span>
+        </div>
+      </div>
+
+      <!-- Series Toggles Toolbar in Modal -->
+      <div class="modal-series-toolbar">
+        <span style="font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">
+          Visible Graphs:
+        </span>
+        <button type="button" class="modal-series-pill cum" id="modal-toggle-cum" onclick="toggleDemandSeries('cum', event)" title="Toggle Total demand graph">
+          <span>●</span> Total Cumulative
+        </button>
+        <button type="button" class="modal-series-pill sb" id="modal-toggle-sb" onclick="toggleDemandSeries('sb', event)" title="Toggle Southbound graph">
+          <span>●</span> Southbound (SB)
+        </button>
+        <button type="button" class="modal-series-pill nb" id="modal-toggle-nb" onclick="toggleDemandSeries('nb', event)" title="Toggle Northbound graph">
+          <span>●</span> Northbound (NB)
+        </button>
+        <div style="margin-left:auto; font-size:0.7rem; color:var(--text-muted); font-weight:600;">
+          <span id="modal-hover-tip">Hover or drag across chart to inspect time</span>
+        </div>
+      </div>
+
+      <!-- Big High-Resolution SVG Canvas Box -->
+      <div class="modal-chart-box" id="modal-chart-container">
+        <svg id="modal-pax-trend-svg" width="100%" height="280" viewBox="0 0 800 280">
+          <defs>
+            <linearGradient id="modalCumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#18181B" stop-opacity="0.14"/>
+              <stop offset="100%" stop-color="#18181B" stop-opacity="0.01"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Background gridlines & Y-axis labels -->
+          <g id="modal-gridlines-group"></g>
+
+          <!-- Cumulative Area Fill -->
+          <path id="modal-area-cum" fill="url(#modalCumGrad)" d=""/>
+
+          <!-- High-Res Trend Lines -->
+          <path id="modal-line-cum" fill="none" stroke="#18181B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d=""/>
+          <path id="modal-line-sb" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
+          <path id="modal-line-nb" fill="none" stroke="#10B981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
+
+          <!-- Peak Callouts Layer -->
+          <g id="modal-peaks-group"></g>
+
+          <!-- Live Scrubber Vertical Line & Series Dots -->
+          <line id="modal-scrub-line" x1="0" y1="25" x2="0" y2="245" stroke="#18181B" stroke-width="1.2" stroke-dasharray="3 3" style="display:none;"/>
+          <circle id="modal-dot-cum" cx="0" cy="0" r="4.2" fill="#18181B" stroke="#FFFFFF" stroke-width="1.8" style="display:none;"/>
+          <circle id="modal-dot-sb" cx="0" cy="0" r="3.8" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.5" style="display:none;"/>
+          <circle id="modal-dot-nb" cx="0" cy="0" r="3.8" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5" style="display:none;"/>
+
+          <!-- X-Axis Labels Layer -->
+          <g id="modal-xaxis-group"></g>
+        </svg>
+
+        <!-- Floating Inspection Tooltip -->
+        <div id="modal-chart-tooltip" class="modal-chart-tooltip"></div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:12px; border-top:1px solid var(--border-subtle);">
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">
+          Tip: Dragging on the chart scrubs simulation playback time in real time.
+        </div>
+        <button class="square-btn" style="padding:6px 16px; font-size:0.78rem;" onclick="closeDemandModal()">
+          Close
         </button>
       </div>
     </div>
@@ -2021,6 +2336,382 @@ def main():
       if (tip) tip.style.display = 'none';
     }}
 
+    window.demandSeriesVisibility = {{ cum: true, sb: true, nb: true }};
+
+    function toggleDemandSeries(key, e) {{
+      if (e) e.stopPropagation();
+      const current = window.demandSeriesVisibility[key];
+      const activeCount = Object.values(window.demandSeriesVisibility).filter(Boolean).length;
+      if (current && activeCount <= 1) return; // Prevent disabling all graphs
+
+      window.demandSeriesVisibility[key] = !current;
+      applyDemandSeriesVisibility();
+    }}
+
+    function applyDemandSeriesVisibility() {{
+      const vis = window.demandSeriesVisibility || {{ cum: true, sb: true, nb: true }};
+
+      // 1. Mini Card Tags and Legend
+      const tagCum = document.getElementById('tag-cum');
+      const tagSB = document.getElementById('tag-sb');
+      const tagNB = document.getElementById('tag-nb');
+      if (tagCum) tagCum.classList.toggle('series-disabled', !vis.cum);
+      if (tagSB) tagSB.classList.toggle('series-disabled', !vis.sb);
+      if (tagNB) tagNB.classList.toggle('series-disabled', !vis.nb);
+
+      const legCum = document.getElementById('legend-btn-cum');
+      const legSB = document.getElementById('legend-btn-sb');
+      const legNB = document.getElementById('legend-btn-nb');
+      if (legCum) legCum.classList.toggle('series-disabled', !vis.cum);
+      if (legSB) legSB.classList.toggle('series-disabled', !vis.sb);
+      if (legNB) legNB.classList.toggle('series-disabled', !vis.nb);
+
+      // 2. Mini Card SVG Elements
+      const lineCum = document.getElementById('pax-line-cum');
+      const areaCum = document.getElementById('pax-area-path');
+      const peakGroup = document.getElementById('peak-marker-group');
+      const dotCum = document.getElementById('chart-cursor-cum');
+
+      const lineSB = document.getElementById('pax-line-sb');
+      const dotSB = document.getElementById('chart-cursor-sb');
+
+      const lineNB = document.getElementById('pax-line-nb');
+      const dotNB = document.getElementById('chart-cursor-nb');
+
+      if (lineCum) lineCum.style.display = vis.cum ? 'inline' : 'none';
+      if (areaCum) areaCum.style.display = vis.cum ? 'inline' : 'none';
+      if (peakGroup) peakGroup.style.display = vis.cum ? 'inline' : 'none';
+      if (dotCum) dotCum.style.display = vis.cum ? 'block' : 'none';
+
+      if (lineSB) lineSB.style.display = vis.sb ? 'inline' : 'none';
+      if (dotSB) dotSB.style.display = vis.sb ? 'block' : 'none';
+
+      if (lineNB) lineNB.style.display = vis.nb ? 'inline' : 'none';
+      if (dotNB) dotNB.style.display = vis.nb ? 'block' : 'none';
+
+      // 3. Modal Toolbar Pills
+      const modCum = document.getElementById('modal-toggle-cum');
+      const modSB = document.getElementById('modal-toggle-sb');
+      const modNB = document.getElementById('modal-toggle-nb');
+      if (modCum) modCum.classList.toggle('series-disabled', !vis.cum);
+      if (modSB) modSB.classList.toggle('series-disabled', !vis.sb);
+      if (modNB) modNB.classList.toggle('series-disabled', !vis.nb);
+
+      // 4. Modal SVG Elements
+      const mLineCum = document.getElementById('modal-line-cum');
+      const mAreaCum = document.getElementById('modal-area-cum');
+      const mPeakCumEl = document.getElementById('modal-peak-cum-el');
+      const mDotCum = document.getElementById('modal-dot-cum');
+
+      const mLineSB = document.getElementById('modal-line-sb');
+      const mPeakSBEl = document.getElementById('modal-peak-sb-el');
+      const mDotSB = document.getElementById('modal-dot-sb');
+
+      const mLineNB = document.getElementById('modal-line-nb');
+      const mPeakNBEl = document.getElementById('modal-peak-nb-el');
+      const mDotNB = document.getElementById('modal-dot-nb');
+
+      if (mLineCum) mLineCum.style.display = vis.cum ? 'inline' : 'none';
+      if (mAreaCum) mAreaCum.style.display = vis.cum ? 'inline' : 'none';
+      if (mPeakCumEl) mPeakCumEl.style.display = vis.cum ? 'inline' : 'none';
+      if (mDotCum) mDotCum.style.display = vis.cum ? 'block' : 'none';
+
+      if (mLineSB) mLineSB.style.display = vis.sb ? 'inline' : 'none';
+      if (mPeakSBEl) mPeakSBEl.style.display = vis.sb ? 'inline' : 'none';
+      if (mDotSB) mDotSB.style.display = vis.sb ? 'block' : 'none';
+
+      if (mLineNB) mLineNB.style.display = vis.nb ? 'inline' : 'none';
+      if (mPeakNBEl) mPeakNBEl.style.display = vis.nb ? 'inline' : 'none';
+      if (mDotNB) mDotNB.style.display = vis.nb ? 'block' : 'none';
+    }}
+
+    function openDemandModal() {{
+      const modal = document.getElementById('demand-trend-modal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      drawModalPaxChart();
+      renderSnapshot(currentIndex);
+    }}
+
+    function closeDemandModal() {{
+      const modal = document.getElementById('demand-trend-modal');
+      if (modal) modal.style.display = 'none';
+    }}
+
+    function closeDemandModalOnBackdrop(e) {{
+      if (e.target && e.target.id === 'demand-trend-modal') {{
+        closeDemandModal();
+      }}
+    }}
+
+    let isModalScrubbing = false;
+
+    function initModalChartInteractions() {{
+      const container = document.getElementById('modal-chart-container');
+      if (!container || container._hasListener) return;
+      container._hasListener = true;
+
+      const tooltip = document.getElementById('modal-chart-tooltip');
+
+      function getIdxFromEvent(e) {{
+        if (!snapshots || snapshots.length === 0) return 0;
+        const rect = container.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+        const padLeft = 55;
+        const padRight = 25;
+        const chartW = 800 - padLeft - padRight;
+        const scaleX = 800 / rect.width;
+        const svgX = (clientX - rect.left) * scaleX;
+        const clampedX = Math.max(padLeft, Math.min(800 - padRight, svgX));
+        const frac = (clampedX - padLeft) / chartW;
+        const idx = Math.min(snapshots.length - 1, Math.max(0, Math.round(frac * (snapshots.length - 1))));
+        return {{ idx, clientX, clientY, rect }};
+      }}
+
+      function handleHoverOrScrub(e, isDrag) {{
+        const {{ idx, clientX, clientY, rect }} = getIdxFromEvent(e);
+        if (isDrag) {{
+          pause();
+          currentIndex = idx;
+          renderSnapshot(idx);
+        }}
+
+        if (tooltip && window._demandData) {{
+          const snap = snapshots[idx];
+          const cum = window._demandData.cumSeries[idx];
+          const sb = window._demandData.sbSeries[idx];
+          const nb = window._demandData.nbSeries[idx];
+          const vis = window.demandSeriesVisibility || {{ cum: true, sb: true, nb: true }};
+
+          let html = `<div style="font-size:0.75rem; font-weight:800; margin-bottom:3px; color:#FFCC00;">${{snap.time_str}}</div>`;
+          if (vis.cum) html += `<div>Total: <strong>${{cum.toLocaleString()}}</strong> pax</div>`;
+          if (vis.sb) html += `<div style="color:#60A5FA;">SB Lane: <strong>${{sb.toLocaleString()}}</strong> pax</div>`;
+          if (vis.nb) html += `<div style="color:#34D399;">NB Lane: <strong>${{nb.toLocaleString()}}</strong> pax</div>`;
+
+          tooltip.innerHTML = html;
+          tooltip.style.display = 'block';
+
+          const tipX = Math.min(rect.width - 90, Math.max(90, clientX - rect.left));
+          const tipY = Math.max(30, clientY - rect.top);
+          tooltip.style.left = tipX + 'px';
+          tooltip.style.top = tipY + 'px';
+        }}
+      }}
+
+      container.addEventListener('mousedown', (e) => {{
+        isModalScrubbing = true;
+        handleHoverOrScrub(e, true);
+      }});
+
+      window.addEventListener('mousemove', (e) => {{
+        if (isModalScrubbing) {{
+          handleHoverOrScrub(e, true);
+        }}
+      }});
+
+      container.addEventListener('mousemove', (e) => {{
+        if (!isModalScrubbing) {{
+          handleHoverOrScrub(e, false);
+        }}
+      }});
+
+      container.addEventListener('mouseleave', () => {{
+        if (!isModalScrubbing && tooltip) {{
+          tooltip.style.display = 'none';
+          if (window._modalPtsCum && window._modalPtsCum[currentIndex]) {{
+            const mScrubLine = document.getElementById('modal-scrub-line');
+            if (mScrubLine) {{
+              mScrubLine.setAttribute('x1', window._modalPtsCum[currentIndex].x);
+              mScrubLine.setAttribute('x2', window._modalPtsCum[currentIndex].x);
+            }}
+          }}
+        }}
+      }});
+
+      window.addEventListener('mouseup', () => {{
+        if (isModalScrubbing) {{
+          isModalScrubbing = false;
+          if (tooltip) tooltip.style.display = 'none';
+        }}
+      }});
+
+      container.addEventListener('touchstart', (e) => {{
+        isModalScrubbing = true;
+        handleHoverOrScrub(e, true);
+      }}, {{ passive: true }});
+
+      container.addEventListener('touchmove', (e) => {{
+        if (isModalScrubbing) {{
+          handleHoverOrScrub(e, true);
+        }}
+      }}, {{ passive: true }});
+
+      window.addEventListener('touchend', () => {{
+        if (isModalScrubbing) {{
+          isModalScrubbing = false;
+          if (tooltip) tooltip.style.display = 'none';
+        }}
+      }});
+    }}
+
+    function drawModalPaxChart() {{
+      if (!window._demandData || !snapshots || snapshots.length === 0) return;
+      const {{ cumSeries, sbSeries, nbSeries, n }} = window._demandData;
+
+      const svgW = 800;
+      const svgH = 280;
+      const padLeft = 55;
+      const padRight = 25;
+      const padTop = 25;
+      const padBottom = 35;
+      const chartW = svgW - padLeft - padRight;
+      const chartH = svgH - padTop - padBottom;
+
+      const maxCum = Math.max(...cumSeries, 1);
+      let step = 1000;
+      if (maxCum <= 1200) step = 200;
+      else if (maxCum <= 2500) step = 500;
+      else if (maxCum <= 6000) step = 1000;
+      else step = 2000;
+      const niceMax = Math.ceil(maxCum / step) * step;
+      const nSteps = Math.round(niceMax / step);
+
+      // 1. Gridlines and Y-axis labels
+      const gridlinesGroup = document.getElementById('modal-gridlines-group');
+      if (gridlinesGroup) {{
+        let gHtml = '';
+        for (let s = 0; s <= nSteps; s++) {{
+          const val = s * step;
+          const y = Number(((svgH - padBottom) - (val / niceMax) * chartH).toFixed(1));
+          gHtml += `<line x1="${{padLeft}}" y1="${{y}}" x2="${{svgW - padRight}}" y2="${{y}}" stroke="#E4E4E7" stroke-width="1" stroke-dasharray="3 3"/>`;
+          gHtml += `<text x="${{padLeft - 8}}" y="${{y + 3.5}}" font-size="10" font-weight="700" fill="#71717A" text-anchor="end">${{val.toLocaleString()}}</text>`;
+        }}
+        gridlinesGroup.innerHTML = gHtml;
+      }}
+
+      // 2. X-axis time labels
+      const xaxisGroup = document.getElementById('modal-xaxis-group');
+      if (xaxisGroup) {{
+        let xHtml = '';
+        const numTicks = 6;
+        for (let t = 0; t <= numTicks; t++) {{
+          const snapIdx = Math.min(n - 1, Math.round((t / numTicks) * (n - 1)));
+          const x = Number((padLeft + (snapIdx / Math.max(1, n - 1)) * chartW).toFixed(1));
+          const timeStr = snapshots[snapIdx] ? snapshots[snapIdx].time_str : '';
+          xHtml += `<line x1="${{x}}" y1="${{svgH - padBottom}}" x2="${{x}}" y2="${{svgH - padBottom + 4}}" stroke="#A1A1AA" stroke-width="1"/>`;
+          xHtml += `<text x="${{x}}" y="${{svgH - padBottom + 16}}" font-size="10" font-weight="700" fill="#71717A" text-anchor="middle">${{timeStr}}</text>`;
+        }}
+        xaxisGroup.innerHTML = xHtml;
+      }}
+
+      // 3. Compute High-Resolution Points
+      const ptsCum = [];
+      const ptsSB = [];
+      const ptsNB = [];
+
+      let peakCumIdx = 0, peakCumVal = -1;
+      let peakSBIdx = 0, peakSBVal = -1;
+      let peakNBIdx = 0, peakNBVal = -1;
+
+      for (let i = 0; i < n; i++) {{
+        const x = Number((padLeft + (i / Math.max(1, n - 1)) * chartW).toFixed(1));
+
+        const yCum = Number(((svgH - padBottom) - (cumSeries[i] / niceMax) * chartH).toFixed(1));
+        ptsCum.push({{ x, y: yCum, val: cumSeries[i] }});
+        if (cumSeries[i] > peakCumVal) {{ peakCumVal = cumSeries[i]; peakCumIdx = i; }}
+
+        const ySB = Number(((svgH - padBottom) - (sbSeries[i] / niceMax) * chartH).toFixed(1));
+        ptsSB.push({{ x, y: ySB, val: sbSeries[i] }});
+        if (sbSeries[i] > peakSBVal) {{ peakSBVal = sbSeries[i]; peakSBIdx = i; }}
+
+        const yNB = Number(((svgH - padBottom) - (nbSeries[i] / niceMax) * chartH).toFixed(1));
+        ptsNB.push({{ x, y: yNB, val: nbSeries[i] }});
+        if (nbSeries[i] > peakNBVal) {{ peakNBVal = nbSeries[i]; peakNBIdx = i; }}
+      }}
+
+      window._modalPtsCum = ptsCum;
+      window._modalPtsSB = ptsSB;
+      window._modalPtsNB = ptsNB;
+
+      // 4. Build SVG Path Strings
+      let dCum = `M ${{ptsCum[0].x}} ${{ptsCum[0].y}}`;
+      let dSB = `M ${{ptsSB[0].x}} ${{ptsSB[0].y}}`;
+      let dNB = `M ${{ptsNB[0].x}} ${{ptsNB[0].y}}`;
+
+      for (let i = 1; i < n; i++) {{
+        dCum += ` L ${{ptsCum[i].x}} ${{ptsCum[i].y}}`;
+        dSB += ` L ${{ptsSB[i].x}} ${{ptsSB[i].y}}`;
+        dNB += ` L ${{ptsNB[i].x}} ${{ptsNB[i].y}}`;
+      }}
+
+      const xEnd = ptsCum[n - 1].x;
+      const xStart = ptsCum[0].x;
+      const yBase = svgH - padBottom;
+      const dArea = `${{dCum}} L ${{xEnd}} ${{yBase}} L ${{xStart}} ${{yBase}} Z`;
+
+      const mLineCum = document.getElementById('modal-line-cum');
+      const mAreaCum = document.getElementById('modal-area-cum');
+      const mLineSB = document.getElementById('modal-line-sb');
+      const mLineNB = document.getElementById('modal-line-nb');
+
+      if (mLineCum) mLineCum.setAttribute('d', dCum);
+      if (mAreaCum) mAreaCum.setAttribute('d', dArea);
+      if (mLineSB) mLineSB.setAttribute('d', dSB);
+      if (mLineNB) mLineNB.setAttribute('d', dNB);
+
+      // 5. Render Peaks Layer in Modal
+      const peaksGroup = document.getElementById('modal-peaks-group');
+      if (peaksGroup && ptsCum[peakCumIdx]) {{
+        const ptC = ptsCum[peakCumIdx];
+        const ptS = ptsSB[peakSBIdx];
+        const ptN = ptsNB[peakNBIdx];
+        let pTextX = ptC.x;
+        let pAnchor = "middle";
+        if (pTextX < 90) {{ pTextX = padLeft + 10; pAnchor = "start"; }}
+        else if (pTextX > svgW - 90) {{ pTextX = svgW - padRight - 10; pAnchor = "end"; }}
+
+        peaksGroup.innerHTML = `
+          <g id="modal-peak-cum-el">
+            <circle cx="${{ptC.x}}" cy="${{ptC.y}}" r="4" fill="#18181B" stroke="#FFFFFF" stroke-width="1.6" />
+            <rect x="${{pTextX - (pAnchor === 'middle' ? 52 : (pAnchor === 'end' ? 104 : 0))}}" y="${{Math.max(12, ptC.y - 22)}}" width="104" height="17" rx="3" fill="rgba(24, 24, 27, 0.88)"/>
+            <text x="${{pTextX - (pAnchor === 'middle' ? 0 : (pAnchor === 'end' ? 52 : -52))}}" y="${{Math.max(24, ptC.y - 10)}}" font-size="9" font-weight="800" font-family="'Plus Jakarta Sans', sans-serif" text-anchor="middle" fill="#FFCC00">
+              ${{peakCumVal.toLocaleString()}} peak Total
+            </text>
+          </g>
+          <g id="modal-peak-sb-el">
+            <circle cx="${{ptS.x}}" cy="${{ptS.y}}" r="3.4" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.2" />
+          </g>
+          <g id="modal-peak-nb-el">
+            <circle cx="${{ptN.x}}" cy="${{ptN.y}}" r="3.4" fill="#10B981" stroke="#FFFFFF" stroke-width="1.2" />
+          </g>
+        `;
+      }}
+
+      // 6. Update HUD Ribbon Stat Values in Modal
+      const hudWin = document.getElementById('modal-hud-window');
+      const hudPeakTotal = document.getElementById('modal-hud-peak-total');
+      const hudPeakSB = document.getElementById('modal-hud-peak-sb');
+      const hudPeakNB = document.getElementById('modal-hud-peak-nb');
+
+      if (hudWin && snapshots[0] && snapshots[n - 1]) {{
+        hudWin.innerText = `${{snapshots[0].time_str}} – ${{snapshots[n - 1].time_str}}`;
+      }}
+      if (hudPeakTotal && snapshots[peakCumIdx]) {{
+        hudPeakTotal.innerHTML = `${{peakCumVal.toLocaleString()}} <span class="modal-hud-sub">(@ ${{snapshots[peakCumIdx].time_str}})</span>`;
+      }}
+      if (hudPeakSB && snapshots[peakSBIdx]) {{
+        hudPeakSB.innerHTML = `${{peakSBVal.toLocaleString()}} <span class="modal-hud-sub">(@ ${{snapshots[peakSBIdx].time_str}})</span>`;
+      }}
+      if (hudPeakNB && snapshots[peakNBIdx]) {{
+        hudPeakNB.innerHTML = `${{peakNBVal.toLocaleString()}} <span class="modal-hud-sub">(@ ${{snapshots[peakNBIdx].time_str}})</span>`;
+      }}
+
+      initModalChartInteractions();
+      applyDemandSeriesVisibility();
+    }}
+
     function drawPaxChart() {{
       if (!snapshots || snapshots.length === 0) return;
       const svgW = 240;
@@ -2063,6 +2754,8 @@ def main():
           peakIdx = i;
         }}
       }}
+
+      window._demandData = {{ cumSeries, sbSeries, nbSeries, maxVal, minVal, n, peakIdx, peakVal }};
 
       const ptsCum = [];
       const ptsSB = [];
@@ -2134,6 +2827,12 @@ def main():
       window._chartPtsCum = ptsCum;
       window._chartPtsSB = ptsSB;
       window._chartPtsNB = ptsNB;
+
+      applyDemandSeriesVisibility();
+      const modal = document.getElementById('demand-trend-modal');
+      if (modal && modal.style.display === 'flex') {{
+        drawModalPaxChart();
+      }}
     }}
 
     function renderSnapshot(idx) {{
@@ -2146,6 +2845,7 @@ def main():
       document.getElementById('kpi-fleet').innerHTML = `${{metadata.fleet_size || 100}} <span class="bento-unit">buses</span>`;
 
       // Update Live Demand Trend Chart
+      const vis = window.demandSeriesVisibility || {{ cum: true, sb: true, nb: true }};
       if (window._chartPtsCum && window._chartPtsCum[idx]) {{
         const ptCum = window._chartPtsCum[idx];
         const ptSB = window._chartPtsSB[idx];
@@ -2156,17 +2856,17 @@ def main():
         const dotNB = document.getElementById('chart-cursor-nb');
 
         if (dotCum) {{
-          dotCum.style.display = 'block';
+          dotCum.style.display = vis.cum ? 'block' : 'none';
           dotCum.setAttribute('cx', ptCum.x);
           dotCum.setAttribute('cy', ptCum.y);
         }}
         if (dotSB) {{
-          dotSB.style.display = 'block';
+          dotSB.style.display = vis.sb ? 'block' : 'none';
           dotSB.setAttribute('cx', ptSB.x);
           dotSB.setAttribute('cy', ptSB.y);
         }}
         if (dotNB) {{
-          dotNB.style.display = 'block';
+          dotNB.style.display = vis.nb ? 'block' : 'none';
           dotNB.setAttribute('cx', ptNB.x);
           dotNB.setAttribute('cy', ptNB.y);
         }}
@@ -2178,6 +2878,44 @@ def main():
         if (liveCumEl) liveCumEl.innerText = `${{ptCum.val.toLocaleString()}}`;
         if (liveSbEl) liveSbEl.innerText = `SB: ${{ptSB.val.toLocaleString()}}`;
         if (liveNbEl) liveNbEl.innerText = `NB: ${{ptNB.val.toLocaleString()}}`;
+      }}
+
+      // Update Modal Live Scrubber Line, Dots, and HUD if modal is rendered
+      if (window._modalPtsCum && window._modalPtsCum[idx]) {{
+        const mPtCum = window._modalPtsCum[idx];
+        const mPtSB = window._modalPtsSB[idx];
+        const mPtNB = window._modalPtsNB[idx];
+
+        const mDotCum = document.getElementById('modal-dot-cum');
+        const mDotSB = document.getElementById('modal-dot-sb');
+        const mDotNB = document.getElementById('modal-dot-nb');
+        const mScrubLine = document.getElementById('modal-scrub-line');
+
+        if (mDotCum) {{
+          mDotCum.style.display = vis.cum ? 'block' : 'none';
+          mDotCum.setAttribute('cx', mPtCum.x);
+          mDotCum.setAttribute('cy', mPtCum.y);
+        }}
+        if (mDotSB) {{
+          mDotSB.style.display = vis.sb ? 'block' : 'none';
+          mDotSB.setAttribute('cx', mPtSB.x);
+          mDotSB.setAttribute('cy', mPtSB.y);
+        }}
+        if (mDotNB) {{
+          mDotNB.style.display = vis.nb ? 'block' : 'none';
+          mDotNB.setAttribute('cx', mPtNB.x);
+          mDotNB.setAttribute('cy', mPtNB.y);
+        }}
+        if (mScrubLine) {{
+          mScrubLine.style.display = 'block';
+          mScrubLine.setAttribute('x1', mPtCum.x);
+          mScrubLine.setAttribute('x2', mPtCum.x);
+        }}
+
+        const mLiveTotal = document.getElementById('modal-hud-live-total');
+        if (mLiveTotal) {{
+          mLiveTotal.innerHTML = `${{snap.total_waiting_pax.toLocaleString()}} <span class="modal-hud-sub">(${{snap.time_str}})</span>`;
+        }}
       }}
 
       // Directional Split Calculation
@@ -2918,6 +3656,14 @@ def main():
       document.body.removeChild(downloadLink);
       URL.revokeObjectURL(url);
     }}
+
+    // Global Escape Key Listener for Modals
+    window.addEventListener('keydown', (e) => {{
+      if (e.key === 'Escape') {{
+        closeDemandModal();
+        closeModal();
+      }}
+    }});
 
     // Initial load
     initVariableTooltips();
