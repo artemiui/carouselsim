@@ -633,7 +633,8 @@ def main():
       font-size: 0.74rem;
       font-weight: 700;
       color: var(--text-muted);
-      font-family: monospace;
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
       flex-shrink: 0;
     }}
 
