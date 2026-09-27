@@ -1914,20 +1914,28 @@ def main():
       <!-- Live Stat HUD Ribbon inside Modal -->
       <div class="modal-demand-hud">
         <div class="modal-hud-item">
-          <span class="modal-hud-label">Corridor Observation Window</span>
+          <span class="modal-hud-label">Corridor Window</span>
           <span class="modal-hud-val" id="modal-hud-window">08:00 AM &ndash; 11:00 AM</span>
         </div>
         <div class="modal-hud-item">
-          <span class="modal-hud-label">Peak Total Demand</span>
+          <span class="modal-hud-label">Peak Corridor Demand</span>
           <span class="modal-hud-val" id="modal-hud-peak-total">4,839 pax</span>
         </div>
         <div class="modal-hud-item">
-          <span class="modal-hud-label">Peak Southbound (SB)</span>
+          <span class="modal-hud-label">Peak Corridor (SB)</span>
           <span class="modal-hud-val" style="color:#2563EB;" id="modal-hud-peak-sb">2,640 pax</span>
         </div>
         <div class="modal-hud-item">
-          <span class="modal-hud-label">Peak Northbound (NB)</span>
+          <span class="modal-hud-label">Peak Corridor (NB)</span>
           <span class="modal-hud-val" style="color:#10B981;" id="modal-hud-peak-nb">2,199 pax</span>
+        </div>
+        <div class="modal-hud-item">
+          <span class="modal-hud-label">Peak Station Surge (SB)</span>
+          <span class="modal-hud-val" style="color:#2563EB;" id="modal-hud-st-peak-sb">--</span>
+        </div>
+        <div class="modal-hud-item">
+          <span class="modal-hud-label">Peak Station Surge (NB)</span>
+          <span class="modal-hud-val" style="color:#10B981;" id="modal-hud-st-peak-nb">--</span>
         </div>
         <div class="modal-hud-item">
           <span class="modal-hud-label">Sim Time Demand</span>
@@ -2678,11 +2686,48 @@ def main():
         `;
       }}
 
+      // Compute peak single-station queues for SB and NB
+      let maxStSBVal = 0, maxStSBName = '', maxStSBTime = '';
+      let maxStNBVal = 0, maxStNBName = '', maxStNBTime = '';
+
+      for (let i = 0; i < n; i++) {{
+        const s = snapshots[i];
+        const tStr = s.time_str || '';
+        if (s.stations) {{
+          for (const [sName, sData] of Object.entries(s.stations)) {{
+            const qSB = sData.pax_q_forward !== undefined ? sData.pax_q_forward : Math.round((sData.pax_q_total || 0) * 0.55);
+            const qNB = sData.pax_q_reverse !== undefined ? sData.pax_q_reverse : Math.round((sData.pax_q_total || 0) * 0.45);
+
+            if (qSB > maxStSBVal) {{
+              maxStSBVal = qSB;
+              maxStSBName = sName;
+              maxStSBTime = tStr;
+            }}
+            if (qNB > maxStNBVal) {{
+              maxStNBVal = qNB;
+              maxStNBName = sName;
+              maxStNBTime = tStr;
+            }}
+          }}
+        }}
+      }}
+
+      function cleanStationShort(name) {{
+        if (!name) return '';
+        return name.replace(' (Roosevelt)', '')
+                   .replace(' (Cubao)', '')
+                   .replace(' (Ayala)', '')
+                   .replace('Parañaque Integrated Terminal Exchange (PITX)', 'PITX')
+                   .replace(' (MOA)', '');
+      }}
+
       // 6. Update HUD Ribbon Stat Values in Modal
       const hudWin = document.getElementById('modal-hud-window');
       const hudPeakTotal = document.getElementById('modal-hud-peak-total');
       const hudPeakSB = document.getElementById('modal-hud-peak-sb');
       const hudPeakNB = document.getElementById('modal-hud-peak-nb');
+      const hudStPeakSB = document.getElementById('modal-hud-st-peak-sb');
+      const hudStPeakNB = document.getElementById('modal-hud-st-peak-nb');
 
       if (hudWin && snapshots[0] && snapshots[n - 1]) {{
         hudWin.innerText = `${{snapshots[0].time_str}} – ${{snapshots[n - 1].time_str}}`;
@@ -2695,6 +2740,14 @@ def main():
       }}
       if (hudPeakNB && snapshots[peakNBIdx]) {{
         hudPeakNB.innerHTML = `${{peakNBVal.toLocaleString()}} <span class="modal-hud-sub">(@ ${{snapshots[peakNBIdx].time_str}})</span>`;
+      }}
+      if (hudStPeakSB && maxStSBName) {{
+        const sName = cleanStationShort(maxStSBName);
+        hudStPeakSB.innerHTML = `${{maxStSBVal.toLocaleString()}} pax <span class="modal-hud-sub">(@ ${{sName}} • ${{maxStSBTime}})</span>`;
+      }}
+      if (hudStPeakNB && maxStNBName) {{
+        const sName = cleanStationShort(maxStNBName);
+        hudStPeakNB.innerHTML = `${{maxStNBVal.toLocaleString()}} pax <span class="modal-hud-sub">(@ ${{sName}} • ${{maxStNBTime}})</span>`;
       }}
 
       initModalChartInteractions();
