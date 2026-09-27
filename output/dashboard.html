@@ -80,7 +80,7 @@
     .canvas-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       flex-wrap: wrap;
       gap: 12px;
       background: #FFFFFF;
@@ -92,6 +92,7 @@
     .header-actions {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
     }
     .square-icon-btn {
@@ -761,20 +762,40 @@
       letter-spacing: -0.01em;
       color: #FFFFFF;
     }
-    .footer-how-link {
-      font-size: 0.76rem;
-      font-weight: 700;
-      color: var(--signage-yellow);
-      text-decoration: none;
+    .footer-how-btn {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      transition: opacity 0.15s ease, text-decoration 0.15s ease;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--signage-dark-card);
+      border: 1px solid #27272A;
+      color: #E4E4E7;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.15s ease;
       width: fit-content;
+      margin-top: 4px;
     }
-    .footer-how-link:hover {
-      text-decoration: underline;
-      opacity: 0.85;
+    .footer-how-btn:hover {
+      background: #27272A;
+      border-color: var(--signage-yellow);
+      color: var(--signage-yellow);
+      transform: translateY(-1px);
+    }
+    .footer-how-btn .q-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--signage-yellow);
+      color: var(--signage-black);
+      font-size: 0.65rem;
+      font-weight: 900;
+      line-height: 1;
     }
     .footer-links {
       display: flex;
@@ -1295,7 +1316,10 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <span class="footer-name">A Project by Artemio Arcega</span>
-        <a href="https://artemiui.vercel.app/blog/article10" target="_blank" rel="noopener noreferrer" class="footer-how-link" title="How it Works: Technical Simulation Writeup">How it Works</a>
+        <a href="https://artemiui.vercel.app/blog/article10" target="_blank" rel="noopener noreferrer" class="footer-how-btn" title="How it Works: Technical Simulation Writeup">
+          <span class="q-mark">?</span>
+          <span>How it Works</span>
+        </a>
       </div>
       <div class="footer-links">
         <a href="https://artemiui.vercel.app" target="_blank" rel="noopener noreferrer" class="footer-icon-link" title="Portfolio (artemiui.vercel.app)" aria-label="Portfolio">
