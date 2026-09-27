@@ -1250,92 +1250,7 @@ def main():
         </button>
       </header>
 
-      <!-- Row 1: Square Bento Metric Cards -->
-      <section class="bento-metrics">
-        
-        <!-- Card 1: Waiting Passengers -->
-        <div class="bento-card bento-yellow">
-          <div class="bento-top">
-            <span class="bento-label has-var-tooltip" data-tooltip-title="Waiting Passengers (pax_q)" data-tooltip="Total commuters queued at all 24 station platforms awaiting bus arrival.">
-              Waiting Commuters
-            </span>
-            <span class="card-square-tag yellow">PAX</span>
-          </div>
-          <div>
-            <div class="bento-num" id="kpi-pax">4,839</div>
-            <div class="bento-sub has-var-tooltip" data-tooltip-title="Directional Queues" data-tooltip="Commuters split across Southbound (Monumento → PITX) and Northbound (PITX → Monumento) lanes.">
-              <span id="kpi-pax-sb-split">SB: 2,640</span> &nbsp;|&nbsp; <span id="kpi-pax-nb-split">NB: 2,199</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 2: Demand Trend Line Chart -->
-        <div class="bento-card bento-pink">
-          <div class="bento-top">
-            <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Total platform waiting passengers fluctuating over time across the simulation window.">
-              Demand Trend
-            </span>
-            <span id="chart-live-val" style="font-size:1.05rem; font-weight:800; font-family:monospace; color:#831843;">4,839 pax</span>
-          </div>
-          
-          <div class="demand-chart-box">
-            <svg id="pax-trend-svg" width="100%" height="100%" viewBox="0 0 240 55" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#DB2777" stop-opacity="0.30"/>
-                  <stop offset="100%" stop-color="#DB2777" stop-opacity="0.0"/>
-                </linearGradient>
-              </defs>
-              <path id="pax-area-path" fill="url(#pinkGrad)" d=""/>
-              <path id="pax-line-path" fill="none" stroke="#DB2777" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
-              <!-- Peak Marker Layer: Only peak labeled, NO vertical line -->
-              <g id="peak-marker-group"></g>
-              <circle id="chart-cursor-dot" cx="0" cy="0" r="3.5" fill="#831843" stroke="#FFFFFF" stroke-width="1.2" style="display:none;"/>
-            </svg>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; font-size:0.68rem; font-weight:800; opacity:0.8; margin-top:4px;">
-            <span id="chart-time-start">08:00 AM</span>
-            <span id="chart-time-mid">09:30 AM</span>
-            <span id="chart-time-end">11:00 AM</span>
-          </div>
-        </div>
-
-        <!-- Card 3: Operating Fleet -->
-        <div class="bento-card bento-green">
-          <div class="bento-top">
-            <span class="bento-label has-var-tooltip" data-tooltip-title="Operating Fleet (fleet_size)" data-tooltip="Total active transit buses circulating inside the segregated median busway.">
-              Operating Fleet
-            </span>
-            <span class="card-square-tag green">FLEET</span>
-          </div>
-          <div>
-            <div class="bento-num" id="kpi-fleet">100 <span class="bento-unit">buses</span></div>
-            <div class="bento-sub has-var-tooltip" data-tooltip-title="Active Lane Allocation" data-tooltip="Buses segregated in physical median lanes with dedicated bypass overtaking paths.">
-              Active in dedicated median busway
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 4: Cycle Time & Reliability -->
-        <div class="bento-card bento-blue">
-          <div class="bento-top">
-            <span class="bento-label has-var-tooltip" data-tooltip-title="Cycle Time & Headway Reliability" data-tooltip="Round-trip loop duration and headway consistency score (stability vs bunching).">
-              Cycle & Score
-            </span>
-            <span class="card-square-tag blue">SCORE</span>
-          </div>
-          <div>
-            <div class="bento-num" id="kpi-cycle">91.2 <span class="bento-unit">min</span></div>
-            <div class="bento-sub has-var-tooltip" data-tooltip-title="Reliability Index" data-tooltip="Percentage of bus arrivals adhering to scheduled dispatch headway tolerances.">
-              <span id="kpi-reliability" style="font-weight:800; color:var(--signage-blue);">94%</span> Headway Stability
-            </div>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- Row 2: Main Workspace Grid (Checkpoints + Map) -->
+      <!-- Main Workspace Grid (Checkpoints + Map) -->
       <section class="workspace-grid">
         
         <!-- Left: 24-Station Corridor Checkpoints -->
@@ -1370,9 +1285,16 @@ def main():
         <!-- Right: Map Card with Concentric Rings & Fixed Route Map -->
         <div class="map-card">
           
-          <!-- Card Top Bar: Title & View Mode Switcher -->
+          <!-- Card Top Bar: Stylistic Transit Emblem & View Mode Switcher -->
           <div class="map-top-bar">
-            <div class="map-section-title">Transit Corridor Circulation</div>
+            <div class="map-style-badge" title="EDSA Carousel Corridor">
+              <svg width="46" height="22" viewBox="0 0 46 22" fill="none">
+                <rect x="0.5" y="0.5" width="45" height="21" rx="4" fill="#18181B" stroke="#27272A"/>
+                <circle cx="11" cy="11" r="3.5" fill="#FFCC00"/>
+                <line x1="16" y1="11" x2="30" y2="11" stroke="#3F3F46" stroke-width="1.8" stroke-dasharray="2 2"/>
+                <circle cx="35" cy="11" r="3.5" fill="#2563EB"/>
+              </svg>
+            </div>
 
             <!-- Dual-View Switcher: Concentric Rings vs Route Map (Route Map Default) -->
             <div class="square-toggle-group">
@@ -1529,6 +1451,91 @@ def main():
             <div class="clock-tag has-var-tooltip" id="clock-display" data-tooltip-title="Simulated Time" data-tooltip="Current simulation clock timestamp.">08:00 AM</div>
             <input type="range" class="time-slider" id="time-slider" min="0" max="{len(am_snaps)-1}" value="0" oninput="onSlide(this.value)">
             <button class="speed-pill has-var-tooltip" id="btn-speed" onclick="toggleSpeed()" data-tooltip-title="Playback Speed" data-tooltip="Toggle playback rate between 1x, 2x, and 4x speed.">1x</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Four Metric Panels below Corridor Checkpoints & Map -->
+      <section class="bento-metrics">
+        
+        <!-- Card 1: Waiting Passengers -->
+        <div class="bento-card bento-yellow">
+          <div class="bento-top">
+            <span class="bento-label has-var-tooltip" data-tooltip-title="Waiting Passengers (pax_q)" data-tooltip="Total commuters queued at all 24 station platforms awaiting bus arrival.">
+              Waiting Commuters
+            </span>
+            <span class="card-square-tag yellow">PAX</span>
+          </div>
+          <div>
+            <div class="bento-num" id="kpi-pax">4,839</div>
+            <div class="bento-sub has-var-tooltip" data-tooltip-title="Directional Queues" data-tooltip="Commuters split across Southbound (Monumento → PITX) and Northbound (PITX → Monumento) lanes.">
+              <span id="kpi-pax-sb-split">SB: 2,640</span> &nbsp;|&nbsp; <span id="kpi-pax-nb-split">NB: 2,199</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Demand Trend Line Chart -->
+        <div class="bento-card bento-pink">
+          <div class="bento-top">
+            <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Total platform waiting passengers fluctuating over time across the simulation window.">
+              Demand Trend
+            </span>
+            <span id="chart-live-val" style="font-size:1.05rem; font-weight:800; font-family:monospace; color:#831843;">4,839 pax</span>
+          </div>
+          
+          <div class="demand-chart-box">
+            <svg id="pax-trend-svg" width="100%" height="100%" viewBox="0 0 240 55" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#DB2777" stop-opacity="0.30"/>
+                  <stop offset="100%" stop-color="#DB2777" stop-opacity="0.0"/>
+                </linearGradient>
+              </defs>
+              <path id="pax-area-path" fill="url(#pinkGrad)" d=""/>
+              <path id="pax-line-path" fill="none" stroke="#DB2777" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
+              <!-- Peak Marker Layer: Only peak labeled, NO vertical line -->
+              <g id="peak-marker-group"></g>
+              <circle id="chart-cursor-dot" cx="0" cy="0" r="3.5" fill="#831843" stroke="#FFFFFF" stroke-width="1.2" style="display:none;"/>
+            </svg>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; font-size:0.68rem; font-weight:800; opacity:0.8; margin-top:4px;">
+            <span id="chart-time-start">08:00 AM</span>
+            <span id="chart-time-mid">09:30 AM</span>
+            <span id="chart-time-end">11:00 AM</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Operating Fleet -->
+        <div class="bento-card bento-green">
+          <div class="bento-top">
+            <span class="bento-label has-var-tooltip" data-tooltip-title="Operating Fleet (fleet_size)" data-tooltip="Total active transit buses circulating inside the segregated median busway.">
+              Operating Fleet
+            </span>
+            <span class="card-square-tag green">FLEET</span>
+          </div>
+          <div>
+            <div class="bento-num" id="kpi-fleet">100 <span class="bento-unit">buses</span></div>
+            <div class="bento-sub has-var-tooltip" data-tooltip-title="Active Lane Allocation" data-tooltip="Buses segregated in physical median lanes with dedicated bypass overtaking paths.">
+              Active in dedicated median busway
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Cycle Time & Reliability -->
+        <div class="bento-card bento-blue">
+          <div class="bento-top">
+            <span class="bento-label has-var-tooltip" data-tooltip-title="Cycle Time & Headway Reliability" data-tooltip="Round-trip loop duration and headway consistency score (stability vs bunching).">
+              Cycle & Score
+            </span>
+            <span class="card-square-tag blue">SCORE</span>
+          </div>
+          <div>
+            <div class="bento-num" id="kpi-cycle">91.2 <span class="bento-unit">min</span></div>
+            <div class="bento-sub has-var-tooltip" data-tooltip-title="Reliability Index" data-tooltip="Percentage of bus arrivals adhering to scheduled dispatch headway tolerances.">
+              <span id="kpi-reliability" style="font-weight:800; color:var(--signage-blue);">94%</span> Headway Stability
+            </div>
           </div>
         </div>
 
