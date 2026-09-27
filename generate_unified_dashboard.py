@@ -249,53 +249,79 @@ def main():
       gap: 18px;
     }}
 
-    /* Top Greeting & Action Header */
+    /* Top Action Bar (Compact Icon-Only Actions + Clock Time Range) */
     .canvas-header {{
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 16px;
-      background: var(--bg-card);
+      gap: 12px;
+      background: #FFFFFF;
       border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
       box-shadow: var(--shadow-soft);
     }}
-    .canvas-title-group h1 {{
-      font-size: 1.55rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }}
-    .canvas-title-group p {{
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      margin-top: 3px;
-    }}
-
-    /* Square Wayfinding Header Badge */
-    .signage-tag-badge {{
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--signage-yellow);
-      color: var(--signage-black);
-      font-size: 0.8rem;
-      font-weight: 800;
-      padding: 2px 7px;
-      border-radius: var(--radius-sm);
-      letter-spacing: 0.05em;
-    }}
-
     .header-actions {{
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+    }}
+    .square-icon-btn {{
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+      padding: 0;
+    }}
+    .square-icon-btn:hover {{
+      border-color: #A1A1AA;
+      background: #FAF8F2;
+      transform: translateY(-1px);
+    }}
+    .square-icon-btn.yellow {{
+      background: var(--signage-yellow);
+      color: var(--signage-black);
+      border-color: var(--signage-yellow);
+    }}
+    .square-icon-btn.yellow:hover {{
+      background: #FACC15;
+      border-color: #EAB308;
+    }}
+    .time-window-pill {{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.15s ease;
+      font-family: inherit;
+      font-variant-numeric: tabular-nums;
+    }}
+    .time-window-pill:hover {{
+      border-color: #A1A1AA;
+      background: #FAF8F2;
+      transform: translateY(-1px);
+    }}
+    .time-window-pill svg {{
+      color: var(--text-muted);
+      flex-shrink: 0;
     }}
     .square-btn {{
       display: inline-flex;
@@ -1091,35 +1117,42 @@ def main():
     <!-- Main Workspace Canvas -->
     <main class="main-canvas">
 
-      <!-- Header Action Bar -->
+      <!-- Compact Top Control Bar: Action Icons + Variable Time Window -->
       <header class="canvas-header">
-        <div class="canvas-title-group">
-          <h1>
-            <span class="signage-tag-badge">EDSA</span>
-            Corridor Circulation Overview
-          </h1>
-          <p>Live multi-berth circulation and transit demand telemetry across 24 stations.</p>
-        </div>
-
         <div class="header-actions">
-          <button class="square-btn" onclick="openModal()" data-tooltip-title="Time Window" data-tooltip="Active observation window for simulated passenger arrivals and dispatch schedule.">
-            <span id="btn-time-label">08:00 AM – 11:00 AM</span>
+          <!-- Parameters [Settings Icon] -->
+          <button class="square-icon-btn has-var-tooltip" id="btn-parameters" onclick="openModal()" data-tooltip-title="Parameters" data-tooltip="Configure simulation parameters (headway, active fleet, capacity, and rogue actor lingering probability)." aria-label="Parameters" title="Parameters">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
           </button>
-          <button class="square-btn" onclick="openModal()" data-tooltip-title="Simulation Controls" data-tooltip="Configure headway, active fleet, bus capacity, and rogue actor lingering probability.">
-            Parameters
+
+          <!-- Run Simulation [Play Icon] -->
+          <button class="square-icon-btn yellow has-var-tooltip" id="btn-run-sim" onclick="runDirectSimulation()" data-tooltip-title="Run Simulation" data-tooltip="Execute real-time SimPy discrete-event simulation across the 24-station corridor." aria-label="Run Simulation" title="Run Simulation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
           </button>
-          <button class="square-btn yellow" onclick="runDirectSimulation()" data-tooltip-title="Run Simulation Engine" data-tooltip="Execute real-time SimPy discrete-event simulation across the 24-station corridor.">
-            Run Simulation
-          </button>
-          <button class="square-btn" id="btn-export-telemetry" onclick="exportSimulationData()" data-tooltip-title="Export Telemetry Data" data-tooltip="Export comprehensive simulation time-slices, station queues, delays, and telemetry logs in JSON format for extended analysis.">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+
+          <!-- Export Data [Download Icon] -->
+          <button class="square-icon-btn has-var-tooltip" id="btn-export-telemetry" onclick="exportSimulationData()" data-tooltip-title="Export Data" data-tooltip="Export comprehensive simulation time-slices, station queues, delays, and telemetry logs in JSON format for extended analysis." aria-label="Export Data" title="Export Data">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Export Data
           </button>
         </div>
+
+        <!-- Dynamic Time Window -->
+        <button class="time-window-pill has-var-tooltip" id="btn-time-window" onclick="openModal()" data-tooltip-title="Simulation Time Window" data-tooltip="Observation window: Click to change simulation start and end hours." aria-label="Simulation Time Window" title="Observation Window: Click to change">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="btn-time-label">08:00 AM – 11:00 AM</span>
+        </button>
       </header>
 
       <!-- Row 1: Square Bento Metric Cards -->
