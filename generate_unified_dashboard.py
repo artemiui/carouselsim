@@ -692,25 +692,77 @@ def main():
       overflow: hidden;
     }}
 
-    /* Dynamic Wayfinding Chokepoint Chip */
-    .lane-status-chip {{
-      background: var(--signage-black);
-      color: #FFFFFF;
-      border: 1px solid #27272A;
-      border-radius: var(--radius-sm);
-      padding: 6px 12px;
+    /* Dynamic Overlaid Dual-Lane Status HUD over Map */
+    .map-status-overlay {{
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 20;
       display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+      max-width: calc(100% - 64px);
+    }}
+    .map-status-chip {{
+      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.76rem;
+      gap: 7px;
+      padding: 5px 11px;
+      border-radius: var(--radius-sm);
+      background: rgba(17, 18, 21, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid #27272A;
+      color: #FFFFFF;
+      font-size: 0.72rem;
       font-weight: 700;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      pointer-events: auto;
+      transition: all 0.15s ease;
+      width: fit-content;
+      user-select: none;
+    }}
+    .map-status-chip:hover {{
+      background: #18191E;
+      border-color: #3F3F46;
+      transform: translateY(-1px);
+    }}
+    .map-status-chip.sb.active-dir {{
+      border-color: rgba(37, 99, 235, 0.85);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+    }}
+    .map-status-chip.nb.active-dir {{
+      border-color: rgba(2, 132, 199, 0.85);
+      box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
     }}
     .status-beacon-dot {{
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
       background: var(--signage-green);
+      flex-shrink: 0;
+      transition: background 0.2s ease;
+    }}
+    .status-sep {{
+      color: #71717A;
+      margin: 0 4px;
+      font-weight: 400;
+    }}
+    .map-top-bar {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }}
+    .map-section-title {{
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--text-strong);
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
     }}
 
     /* Map Legend */
@@ -1316,13 +1368,9 @@ def main():
         <!-- Right: Map Card with Concentric Rings & Fixed Route Map -->
         <div class="map-card">
           
-          <!-- Card Top Bar: Status Chip & View Mode Switcher -->
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
-            <div class="lane-status-chip" id="map-floating-chip">
-              <div class="status-beacon-dot" id="chip-status-dot"></div>
-              <span id="chip-station-name">Corridor Circulation Status</span> &nbsp;|&nbsp;
-              <span id="chip-queue-info" style="color:var(--signage-green);">Nominal flow</span>
-            </div>
+          <!-- Card Top Bar: Title & View Mode Switcher -->
+          <div class="map-top-bar">
+            <div class="map-section-title">Transit Corridor Circulation</div>
 
             <!-- Dual-View Switcher: Concentric Rings vs Route Map (Route Map Default) -->
             <div class="square-toggle-group">
@@ -1363,6 +1411,18 @@ def main():
           <!-- Visualization Canvas Wrapper -->
           <div class="map-canvas-wrapper" id="map-container-el">
             <div id="map-tooltip"></div>
+
+            <!-- Overlaid Dual-Direction Corridor Status HUD -->
+            <div class="map-status-overlay" id="map-status-overlay">
+              <div class="map-status-chip sb active-dir" id="sb-status-chip" onclick="setCorridorDirection('southbound')" title="Click to inspect Southbound circulation">
+                <div class="status-beacon-dot" id="sb-status-dot"></div>
+                <span class="map-status-text" id="sb-status-text">[SB Lane] Corridor Flow: Clear <span class="status-sep">|</span> <span style="color:var(--signage-green);">Nominal flow</span></span>
+              </div>
+              <div class="map-status-chip nb" id="nb-status-chip" onclick="setCorridorDirection('northbound')" title="Click to inspect Northbound circulation">
+                <div class="status-beacon-dot" id="nb-status-dot"></div>
+                <span class="map-status-text" id="nb-status-text">[NB Lane] Corridor Flow: Clear <span class="status-sep">|</span> <span style="color:var(--signage-green);">Nominal flow</span></span>
+              </div>
+            </div>
 
             <!-- Floating Map Zoom Controls -->
             <div class="map-zoom-controls">
@@ -1690,6 +1750,11 @@ def main():
       document.getElementById('btn-dir-sb').classList.toggle('active', dir === 'southbound');
       document.getElementById('btn-dir-nb').classList.toggle('active', dir === 'northbound');
       
+      const sbChip = document.getElementById('sb-status-chip');
+      const nbChip = document.getElementById('nb-status-chip');
+      if (sbChip) sbChip.classList.toggle('active-dir', dir === 'southbound');
+      if (nbChip) nbChip.classList.toggle('active-dir', dir === 'northbound');
+
       const subTitle = document.getElementById('dir-sub-title');
       const durPill = document.getElementById('route-duration-pill');
       if (dir === 'southbound') {{
@@ -1999,55 +2064,87 @@ def main():
       if (sbSplitEl) sbSplitEl.innerText = `SB: ${{totalSBWait.toLocaleString()}}`;
       if (nbSplitEl) nbSplitEl.innerText = `NB: ${{totalNBWait.toLocaleString()}}`;
 
-      // Identify active rogue actor and primary chokepoint for the ACTIVE direction
-      let worstStationName = null;
-      let maxBusQueue = 0;
-      let hasRogue = false;
-      let rogueStation = null;
+      // Identify active rogue actor and primary chokepoint for BOTH SB and NB
+      let sbWorstStation = null;
+      let sbMaxQueue = 0;
+      let sbHasRogue = false;
+      let sbRogueStation = null;
+
+      let nbWorstStation = null;
+      let nbMaxQueue = 0;
+      let nbHasRogue = false;
+      let nbRogueStation = null;
 
       for (const [stName, stData] of Object.entries(snap.stations)) {{
-        const dirQueue = isSB 
-          ? (stData.buses_queuing_sb !== undefined ? stData.buses_queuing_sb : (stData.buses_queuing || 0))
-          : (stData.buses_queuing_nb !== undefined ? stData.buses_queuing_nb : 0);
-        
-        const dirRogue = isSB
-          ? (stData.has_rogue_bus_sb !== undefined ? stData.has_rogue_bus_sb : stData.has_rogue_bus)
-          : (stData.has_rogue_bus_nb !== undefined ? stData.has_rogue_bus_nb : false);
-
-        if (dirRogue) {{
-          hasRogue = true;
-          rogueStation = stName;
-          worstStationName = stName;
-          maxBusQueue = Math.max(maxBusQueue, dirQueue);
-          break;
+        // Southbound (SB)
+        const sbQ = stData.buses_queuing_sb !== undefined ? stData.buses_queuing_sb : (stData.buses_queuing || 0);
+        const sbR = stData.has_rogue_bus_sb !== undefined ? stData.has_rogue_bus_sb : (stData.has_rogue_bus || false);
+        if (sbR && !sbHasRogue) {{
+          sbHasRogue = true;
+          sbRogueStation = stName;
         }}
-        if (dirQueue > maxBusQueue) {{
-          maxBusQueue = dirQueue;
-          worstStationName = stName;
+        if (sbQ > sbMaxQueue) {{
+          sbMaxQueue = sbQ;
+          sbWorstStation = stName;
+        }}
+
+        // Northbound (NB)
+        const nbQ = stData.buses_queuing_nb !== undefined ? stData.buses_queuing_nb : 0;
+        const nbR = stData.has_rogue_bus_nb !== undefined ? stData.has_rogue_bus_nb : false;
+        if (nbR && !nbHasRogue) {{
+          nbHasRogue = true;
+          nbRogueStation = stName;
+        }}
+        if (nbQ > nbMaxQueue) {{
+          nbMaxQueue = nbQ;
+          nbWorstStation = stName;
+        }}
+      }}
+      if (sbHasRogue && sbRogueStation) sbWorstStation = sbRogueStation;
+      if (nbHasRogue && nbRogueStation) nbWorstStation = nbRogueStation;
+
+      // Active direction reference for KPIs and map beacon
+      const worstStationName = isSB ? (sbWorstStation || nbWorstStation) : (nbWorstStation || sbWorstStation);
+      const maxBusQueue = isSB ? sbMaxQueue : nbMaxQueue;
+      const hasRogue = isSB ? sbHasRogue : nbHasRogue;
+
+      // Overlaid Dual Status HUD over Map (Both SB and NB)
+      const sbDot = document.getElementById('sb-status-dot');
+      const sbText = document.getElementById('sb-status-text');
+      const nbDot = document.getElementById('nb-status-dot');
+      const nbText = document.getElementById('nb-status-text');
+      const sbChip = document.getElementById('sb-status-chip');
+      const nbChip = document.getElementById('nb-status-chip');
+
+      if (sbChip) sbChip.classList.toggle('active-dir', isSB);
+      if (nbChip) nbChip.classList.toggle('active-dir', !isSB);
+
+      // SB Status Text
+      if (sbText) {{
+        if (sbHasRogue && sbRogueStation) {{
+          sbText.innerHTML = `[SB Lane] Rogue Bus: ${{sbRogueStation}} <span class="status-sep">|</span> <span style="color:var(--signage-yellow);">Lingering (${{sbMaxQueue}} buses queued)</span>`;
+          if (sbDot) sbDot.style.background = "var(--signage-orange)";
+        }} else if (sbMaxQueue > 2 && sbWorstStation) {{
+          sbText.innerHTML = `[SB Lane] Chokepoint: ${{sbWorstStation}} <span class="status-sep">|</span> <span style="color:var(--signage-yellow);">${{sbMaxQueue}} buses queued (~${{sbMaxQueue * 12}}m backup)</span>`;
+          if (sbDot) sbDot.style.background = "var(--signage-orange)";
+        }} else {{
+          sbText.innerHTML = `[SB Lane] Corridor Flow: Clear <span class="status-sep">|</span> <span style="color:var(--signage-green);">Nominal flow</span>`;
+          if (sbDot) sbDot.style.background = "var(--signage-green)";
         }}
       }}
 
-      // Floating dynamic status chip (Lane-specific)
-      const chipQueue = document.getElementById('chip-queue-info');
-      const chipStation = document.getElementById('chip-station-name');
-      const chipDot = document.getElementById('chip-status-dot');
-      const laneTag = isSB ? 'SB Lane' : 'NB Lane';
-
-      if (hasRogue && rogueStation) {{
-        chipStation.innerText = `[${{laneTag}}] Rogue Bus: ${{rogueStation}}`;
-        chipQueue.innerText = `Lingering to fill up | ${{maxBusQueue}} buses queued`;
-        chipQueue.style.color = "var(--signage-yellow)";
-        if (chipDot) chipDot.style.background = "var(--signage-orange)";
-      }} else if (maxBusQueue > 2 && worstStationName) {{
-        chipStation.innerText = `[${{laneTag}}] Chokepoint: ${{worstStationName}}`;
-        chipQueue.innerText = `${{maxBusQueue}} buses queued (~${{maxBusQueue * 12}}m backup)`;
-        chipQueue.style.color = "var(--signage-yellow)";
-        if (chipDot) chipDot.style.background = "var(--signage-orange)";
-      }} else {{
-        chipStation.innerText = `Corridor Flow (${{laneTag}}): Clear`;
-        chipQueue.innerText = "No bottlenecks (0-pax free flow)";
-        chipQueue.style.color = "var(--signage-green)";
-        if (chipDot) chipDot.style.background = "var(--signage-green)";
+      // NB Status Text
+      if (nbText) {{
+        if (nbHasRogue && nbRogueStation) {{
+          nbText.innerHTML = `[NB Lane] Rogue Bus: ${{nbRogueStation}} <span class="status-sep">|</span> <span style="color:var(--signage-yellow);">Lingering (${{nbMaxQueue}} buses queued)</span>`;
+          if (nbDot) nbDot.style.background = "var(--signage-orange)";
+        }} else if (nbMaxQueue > 2 && nbWorstStation) {{
+          nbText.innerHTML = `[NB Lane] Chokepoint: ${{nbWorstStation}} <span class="status-sep">|</span> <span style="color:var(--signage-yellow);">${{nbMaxQueue}} buses queued (~${{nbMaxQueue * 12}}m backup)</span>`;
+          if (nbDot) nbDot.style.background = "var(--signage-orange)";
+        }} else {{
+          nbText.innerHTML = `[NB Lane] Corridor Flow: Clear <span class="status-sep">|</span> <span style="color:var(--signage-green);">Nominal flow</span>`;
+          if (nbDot) nbDot.style.background = "var(--signage-green)";
+        }}
       }}
 
       // Dynamic Beacon Ripple on SVG maps (Circle View & Route View)
