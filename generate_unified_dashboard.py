@@ -1734,7 +1734,7 @@ def main():
               EXPAND
             </span>
             <div class="chart-breakdown-tags">
-              <span class="trend-tag cum" id="tag-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle Total Demand">Total: <strong id="chart-live-cum">4,839</strong></span>
+              <span class="trend-tag cum" id="tag-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle ALL Demand"><strong id="chart-live-cum">ALL: 4,839</strong></span>
               <span class="trend-tag sb" id="tag-sb" onclick="toggleDemandSeries('sb', event)" title="Click to toggle Southbound Demand"><strong id="chart-live-sb">SB: 2,640</strong></span>
               <span class="trend-tag nb" id="tag-nb" onclick="toggleDemandSeries('nb', event)" title="Click to toggle Northbound Demand"><strong id="chart-live-nb">NB: 2,199</strong></span>
             </div>
@@ -1764,7 +1764,7 @@ def main():
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; font-weight:800; opacity:0.85; margin-top:4px;">
             <span id="chart-time-start">08:00 AM</span>
             <div class="trend-chart-legend">
-              <span class="legend-dot-label cum" id="legend-btn-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle Total line"><span class="legend-line cum"></span> Total</span>
+              <span class="legend-dot-label cum" id="legend-btn-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle ALL line"><span class="legend-line cum"></span> ALL</span>
               <span class="legend-dot-label sb" id="legend-btn-sb" onclick="toggleDemandSeries('sb', event)" title="Click to toggle SB line"><span class="legend-line sb"></span> SB</span>
               <span class="legend-dot-label nb" id="legend-btn-nb" onclick="toggleDemandSeries('nb', event)" title="Click to toggle NB line"><span class="legend-line nb"></span> NB</span>
             </div>
@@ -1904,19 +1904,8 @@ def main():
   <div class="modal-backdrop" id="demand-trend-modal" onclick="closeDemandModalOnBackdrop(event)">
     <div class="modal-card modal-card-wide" onclick="event.stopPropagation()">
       
-      <!-- Modal Header -->
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-        <div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h2 class="modal-title" style="margin:0;">Corridor Passenger Demand Trend</h2>
-            <span class="card-square-tag" style="background:#18181B; color:#FFCC00; font-size:0.62rem; font-weight:800; padding:2px 6px; border-radius:3px;">
-              EXPANDED VIEW
-            </span>
-          </div>
-          <div class="modal-sub" style="margin:4px 0 0 0;">
-            High-resolution corridor queue accumulation and directional flow across all 24 EDSA stations. Click or scrub to jump time.
-          </div>
-        </div>
+      <!-- Modal Close Bar -->
+      <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
         <button class="modal-close-btn" onclick="closeDemandModal()" title="Close overlay (Esc)" aria-label="Close modal">
           &times;
         </button>
@@ -1951,8 +1940,8 @@ def main():
         <span style="font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">
           Visible Graphs:
         </span>
-        <button type="button" class="modal-series-pill cum" id="modal-toggle-cum" onclick="toggleDemandSeries('cum', event)" title="Toggle Total demand graph">
-          <span>●</span> Total Cumulative
+        <button type="button" class="modal-series-pill cum" id="modal-toggle-cum" onclick="toggleDemandSeries('cum', event)" title="Toggle ALL demand graph">
+          <span>●</span> ALL (Cumulative)
         </button>
         <button type="button" class="modal-series-pill sb" id="modal-toggle-sb" onclick="toggleDemandSeries('sb', event)" title="Toggle Southbound graph">
           <span>●</span> Southbound (SB)
@@ -2486,7 +2475,7 @@ def main():
           const vis = window.demandSeriesVisibility || {{ cum: true, sb: true, nb: true }};
 
           let html = `<div style="font-size:0.75rem; font-weight:800; margin-bottom:3px; color:#FFCC00;">${{snap.time_str}}</div>`;
-          if (vis.cum) html += `<div>Total: <strong>${{cum.toLocaleString()}}</strong> pax</div>`;
+          if (vis.cum) html += `<div>ALL: <strong>${{cum.toLocaleString()}}</strong> pax</div>`;
           if (vis.sb) html += `<div style="color:#60A5FA;">SB Lane: <strong>${{sb.toLocaleString()}}</strong> pax</div>`;
           if (vis.nb) html += `<div style="color:#34D399;">NB Lane: <strong>${{nb.toLocaleString()}}</strong> pax</div>`;
 
@@ -2875,7 +2864,7 @@ def main():
         const liveCumEl = document.getElementById('chart-live-cum');
         const liveSbEl = document.getElementById('chart-live-sb');
         const liveNbEl = document.getElementById('chart-live-nb');
-        if (liveCumEl) liveCumEl.innerText = `${{ptCum.val.toLocaleString()}}`;
+        if (liveCumEl) liveCumEl.innerText = `ALL: ${{ptCum.val.toLocaleString()}}`;
         if (liveSbEl) liveSbEl.innerText = `SB: ${{ptSB.val.toLocaleString()}}`;
         if (liveNbEl) liveNbEl.innerText = `NB: ${{ptNB.val.toLocaleString()}}`;
       }}
