@@ -503,8 +503,8 @@ def main():
       background: rgba(37, 99, 235, 0.12);
     }}
     .trend-tag.nb {{
-      color: #0369A1;
-      background: rgba(2, 132, 199, 0.12);
+      color: #047857;
+      background: rgba(16, 185, 129, 0.14);
     }}
     .trend-chart-legend {{
       display: flex;
@@ -532,7 +532,7 @@ def main():
       background: #2563EB;
     }}
     .legend-line.nb {{
-      background: #0284C7;
+      background: #10B981;
     }}
 
     /* Row 2: Main Workspace Grid (Checkpoints + Map) */
@@ -787,8 +787,8 @@ def main():
       box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
     }}
     .map-status-chip.nb.active-dir {{
-      border-color: rgba(2, 132, 199, 0.85);
-      box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+      border-color: rgba(16, 185, 129, 0.85);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
     }}
     .status-beacon-dot {{
       width: 7px;
@@ -1377,7 +1377,7 @@ def main():
               <span style="color:#2563EB; font-size:13px;">●</span> SB Bus
             </span>
             <span class="legend-item has-var-tooltip" data-tooltip-title="Northbound Bus" data-tooltip="Bus circulating northbound (inner ring / counter-clockwise).">
-              <span style="color:#0284C7; font-size:13px;">●</span> NB Bus
+              <span style="color:#10B981; font-size:13px;">●</span> NB Bus
             </span>
             <span class="legend-item has-var-tooltip" data-tooltip-title="Rogue / Queued Bus" data-tooltip="Bus lingering to fill up or delayed in berth queue.">
               <span style="color:#EA580C; font-size:13px;">●</span> Rogue / Queue
@@ -1550,13 +1550,13 @@ def main():
               </defs>
               <path id="pax-area-path" fill="url(#cumGrad)" d=""/>
               <path id="pax-line-sb" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d=""/>
-              <path id="pax-line-nb" fill="none" stroke="#0284C7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d=""/>
+              <path id="pax-line-nb" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d=""/>
               <path id="pax-line-cum" fill="none" stroke="#18181B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d=""/>
               <!-- Peak Marker Layer: Only peak labeled, NO vertical line -->
               <g id="peak-marker-group"></g>
               <!-- Live Time Cursor Dots for all 3 series -->
               <circle id="chart-cursor-sb" cx="0" cy="0" r="2.8" fill="#2563EB" stroke="#FFFFFF" stroke-width="1" style="display:none;"/>
-              <circle id="chart-cursor-nb" cx="0" cy="0" r="2.8" fill="#0284C7" stroke="#FFFFFF" stroke-width="1" style="display:none;"/>
+              <circle id="chart-cursor-nb" cx="0" cy="0" r="2.8" fill="#10B981" stroke="#FFFFFF" stroke-width="1" style="display:none;"/>
               <circle id="chart-cursor-cum" cx="0" cy="0" r="3.4" fill="#18181B" stroke="#FFFFFF" stroke-width="1.2" style="display:none;"/>
             </svg>
           </div>
@@ -2299,7 +2299,7 @@ def main():
             beaconMid.setAttribute('cy', stNode.y);
             beaconCore.setAttribute('cx', stNode.x);
             beaconCore.setAttribute('cy', stNode.y);
-            beaconCore.setAttribute('fill', hasRogue ? '#EA580C' : (isSB ? '#EA580C' : '#0284C7'));
+            beaconCore.setAttribute('fill', hasRogue ? '#EA580C' : (isSB ? '#2563EB' : '#10B981'));
           }}
 
           // Update Concentric Circles Beacon
@@ -2313,7 +2313,7 @@ def main():
             circleBeaconMid.setAttribute('cy', cy);
             circleBeaconCore.setAttribute('cx', cx);
             circleBeaconCore.setAttribute('cy', cy);
-            circleBeaconCore.setAttribute('fill', hasRogue ? '#EA580C' : (isSB ? '#EA580C' : '#0284C7'));
+            circleBeaconCore.setAttribute('fill', hasRogue ? '#EA580C' : (isSB ? '#2563EB' : '#10B981'));
           }}
         }}
       }} else {{
@@ -2389,7 +2389,7 @@ def main():
     }}
 
     function updateBusLayer(snap, idx) {{
-      const numBusesPerDir = 12;
+      const totalFleet = 24;
       const nSteps = Math.max(1, snapshots.length);
       const frac = idx / nSteps;
 
@@ -2410,25 +2410,30 @@ def main():
         const rOut = {r_outer}; // 115px (Outer circle - Southbound)
         const rIn = {r_inner};   // 85px (Inner circle - Northbound)
 
-        // 1. Southbound Buses on Outer Circle (CLOCKWISE ↻)
-        for (let i = 0; i < numBusesPerDir; i++) {{
-          const busOffset = ((i / numBusesPerDir) + (frac * 2.2)) % 1.0;
-          const theta = -Math.PI / 2.0 + (busOffset * 2.0 * Math.PI); // Clockwise
-          const bx = round(cx + rOut * Math.cos(theta), 1);
-          const by = round(cy + rOut * Math.sin(theta), 1);
+        // Continuous circulation loop: Southbound (outer ring, clockwise, Blue) -> Northbound (inner ring, counter-clockwise, Green)
+        for (let b = 0; b < totalFleet; b++) {{
+          const busCycle = ((b / totalFleet) + (frac * 2.2)) % 1.0;
+          const isSB = busCycle < 0.5;
+          const p = isSB ? (busCycle / 0.5) : ((busCycle - 0.5) / 0.5);
 
-          const dotColor = (rogueSB && i === 0) ? '#EA580C' : '#2563EB';
-          circleBusHtml += `<circle cx="${{bx}}" cy="${{by}}" r="3.4" fill="${{dotColor}}" stroke="#111215" stroke-width="1.2" />`;
-        }}
+          // Transition smoothly between outer and inner ring at turnaround zones
+          let r = isSB ? rOut : rIn;
+          if (p > 0.94) {{
+            const bridge = (p - 0.94) / 0.06;
+            r = isSB ? (rOut - bridge * (rOut - rIn)) : (rIn + bridge * (rOut - rIn));
+          }}
 
-        // 2. Northbound Buses on Inner Circle (COUNTER-CLOCKWISE ↺)
-        for (let j = 0; j < numBusesPerDir; j++) {{
-          const busOffset = ((j / numBusesPerDir) + (frac * 2.2)) % 1.0;
-          const theta = -Math.PI / 2.0 - (busOffset * 2.0 * Math.PI); // Counter-Clockwise
-          const bx = round(cx + rIn * Math.cos(theta), 1);
-          const by = round(cy + rIn * Math.sin(theta), 1);
+          const theta = isSB
+            ? (-Math.PI / 2.0 + (p * 2.0 * Math.PI))
+            : (-Math.PI / 2.0 - (p * 2.0 * Math.PI));
 
-          const dotColor = (rogueNB && j === 0) ? '#EA580C' : '#0284C7';
+          const bx = round(cx + r * Math.cos(theta), 1);
+          const by = round(cy + r * Math.sin(theta), 1);
+
+          let dotColor = isSB ? '#2563EB' : '#10B981';
+          if (isSB && rogueSB && b === 0) dotColor = '#EA580C';
+          else if (!isSB && rogueNB && b === 12) dotColor = '#EA580C';
+
           circleBusHtml += `<circle cx="${{bx}}" cy="${{by}}" r="3.4" fill="${{dotColor}}" stroke="#111215" stroke-width="1.2" />`;
         }}
 
@@ -2467,27 +2472,49 @@ def main():
 
         let routeBusHtml = '';
 
-        // Southbound Buses along Route
-        for (let i = 0; i < numBusesPerDir; i++) {{
-          const offset = ((i / numBusesPerDir) + (frac * 2.2)) % 1.0;
-          const dist = offset * totalLen;
-          if (chokeDistSB >= 0 && maxQueueSB > 2 && Math.abs(dist - chokeDistSB) < 14) continue;
+        // Single fleet circulating continuously:
+        // When traveling Southbound (Monumento -> PITX), bus is Blue (#2563EB).
+        // Upon rotating at PITX terminal, it turns around and changes color to Green (#10B981) heading Northbound!
+        // Upon rotating at Monumento terminal, it turns around and changes back to Blue (#2563EB).
+        for (let b = 0; b < totalFleet; b++) {{
+          const busCycle = ((b / totalFleet) + (frac * 2.2)) % 1.0;
+          const isSB = busCycle < 0.5;
+          const p = isSB ? (busCycle / 0.5) : ((busCycle - 0.5) / 0.5);
 
-          const pt = pathEl.getPointAtLength(dist);
-          routeBusHtml += `<circle cx="${{(pt.x - 1.5).toFixed(1)}}" cy="${{(pt.y - 1.5).toFixed(1)}}" r="3.8" fill="#2563EB" stroke="#111215" stroke-width="1.2" />`;
+          // Southbound moves 0 -> totalLen, Northbound moves totalLen -> 0
+          const dist = isSB ? (p * totalLen) : ((1.0 - p) * totalLen);
+
+          // If trapped at choke point queue, skip drawing regular moving bus
+          if (isSB && chokeDistSB >= 0 && maxQueueSB > 2 && Math.abs(dist - chokeDistSB) < 14) continue;
+          if (!isSB && chokeDistNB >= 0 && maxQueueNB > 2 && Math.abs(dist - chokeDistNB) < 14) continue;
+
+          // Lane lateral offset with terminal turnaround rotation curve
+          let xOff = isSB ? -1.5 : 1.5;
+          let yOff = isSB ? -1.5 : 1.5;
+          if (p > 0.95) {{
+            const turn = (p - 0.95) / 0.05;
+            if (isSB) {{
+              // Rotating at PITX turnaround: moves from SB lane (-1.5) to NB lane (+1.5)
+              xOff = -1.5 + (3.0 * turn);
+              yOff = -1.5 + (3.0 * turn);
+            }} else {{
+              // Rotating at Monumento turnaround: moves from NB lane (+1.5) to SB lane (-1.5)
+              xOff = 1.5 - (3.0 * turn);
+              yOff = 1.5 - (3.0 * turn);
+            }}
+          }}
+
+          const clampedDist = Math.max(0, Math.min(totalLen, dist));
+          const pt = pathEl.getPointAtLength(clampedDist);
+
+          let dotColor = isSB ? '#2563EB' : '#10B981';
+          if (isSB && rogueSB && b === 0) dotColor = '#EA580C';
+          else if (!isSB && rogueNB && b === 12) dotColor = '#EA580C';
+
+          routeBusHtml += `<circle cx="${{(pt.x + xOff).toFixed(1)}}" cy="${{(pt.y + yOff).toFixed(1)}}" r="3.8" fill="${{dotColor}}" stroke="#111215" stroke-width="1.2" />`;
         }}
 
-        // Northbound Buses along Route
-        for (let i = 0; i < numBusesPerDir; i++) {{
-          const offset = (1.0 - ((i / numBusesPerDir) + (frac * 2.2)) % 1.0) % 1.0;
-          const dist = offset * totalLen;
-          if (chokeDistNB >= 0 && maxQueueNB > 2 && Math.abs(dist - chokeDistNB) < 14) continue;
-
-          const pt = pathEl.getPointAtLength(dist);
-          routeBusHtml += `<circle cx="${{(pt.x + 1.5).toFixed(1)}}" cy="${{(pt.y + 1.5).toFixed(1)}}" r="3.8" fill="#0284C7" stroke="#111215" stroke-width="1.2" />`;
-        }}
-
-        // Queued Stack SB
+        // Queued Stack SB (Orange / Blue)
         if (chokeDistSB >= 0 && (maxQueueSB > 0 || rogueSB)) {{
           const qCount = Math.min(6, Math.max(rogueSB ? 2 : 1, Math.ceil(maxQueueSB / 4)));
           for (let q = 1; q <= qCount; q++) {{
@@ -2500,13 +2527,13 @@ def main():
           }}
         }}
 
-        // Queued Stack NB
+        // Queued Stack NB (Orange / Green)
         if (chokeDistNB >= 0 && (maxQueueNB > 0 || rogueNB)) {{
           const qCount = Math.min(6, Math.max(rogueNB ? 2 : 1, Math.ceil(maxQueueNB / 4)));
           for (let q = 1; q <= qCount; q++) {{
             const qDist = Math.min(totalLen, chokeDistNB + (q * 7));
             const qPt = pathEl.getPointAtLength(qDist);
-            const dotColor = rogueNB && q === 1 ? '#EA580C' : '#0284C7';
+            const dotColor = rogueNB && q === 1 ? '#EA580C' : '#10B981';
             routeBusHtml += `<circle cx="${{(qPt.x + 1.5).toFixed(1)}}" cy="${{(qPt.y + 1.5).toFixed(1)}}" r="4.5" fill="${{dotColor}}" stroke="#FFFFFF" stroke-width="1.4">
                                <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
                              </circle>`;
