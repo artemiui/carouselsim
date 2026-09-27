@@ -1723,20 +1723,22 @@ def main():
 
         <!-- Card 2: Demand Trend Line Chart (NB, SB, and Cumulative) -->
         <div class="bento-card bento-pink clickable-demand-card" onclick="openDemandModal()" title="Click to open high-resolution demand trend overlay">
-          <div class="bento-top">
+          <div class="bento-top" style="align-items:flex-start;">
             <span class="bento-label has-var-tooltip" data-tooltip-title="Demand Trend Line Chart" data-tooltip="Corridor passenger waiting demand over time split by Southbound (SB), Northbound (NB), and Cumulative total. Click card to open full-screen overlay, or click pills to toggle graphs.">
               Demand Trend
             </span>
-            <span class="demand-expand-badge" title="Expand high-resolution view">
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V2.707l3.146 3.147a.5.5 0 0 0 .708-.708L2.707 2H5.5a.5.5 0 0 0 0-1h-4zm13 0a.5.5 0 0 0-.5.5V5.5a.5.5 0 0 0 1 0V2.707l-3.146 3.147a.5.5 0 0 0 .708.708L14.707 2h2.793a.5.5 0 0 0 0-1h-4zm0 14a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-1 0v2.793l-3.146-3.147a.5.5 0 0 0-.708.708L13.293 14H10.5a.5.5 0 0 0 0 1h4zm-13 0a.5.5 0 0 0 .5-.5v-2.793l3.146-3.147a.5.5 0 0 0-.708-.708L2 13.293V10.5a.5.5 0 0 0-1 0v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H2.707z"/>
-              </svg>
-              EXPAND
-            </span>
-            <div class="chart-breakdown-tags">
-              <span class="trend-tag cum" id="tag-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle ALL Demand"><strong id="chart-live-cum">ALL: 4,839</strong></span>
-              <span class="trend-tag sb" id="tag-sb" onclick="toggleDemandSeries('sb', event)" title="Click to toggle Southbound Demand"><strong id="chart-live-sb">SB: 2,640</strong></span>
-              <span class="trend-tag nb" id="tag-nb" onclick="toggleDemandSeries('nb', event)" title="Click to toggle Northbound Demand"><strong id="chart-live-nb">NB: 2,199</strong></span>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+              <div class="chart-breakdown-tags">
+                <span class="trend-tag cum" id="tag-cum" onclick="toggleDemandSeries('cum', event)" title="Click to toggle ALL Demand"><strong id="chart-live-cum">ALL: 4,839</strong></span>
+                <span class="trend-tag sb" id="tag-sb" onclick="toggleDemandSeries('sb', event)" title="Click to toggle Southbound Demand"><strong id="chart-live-sb">SB: 2,640</strong></span>
+                <span class="trend-tag nb" id="tag-nb" onclick="toggleDemandSeries('nb', event)" title="Click to toggle Northbound Demand"><strong id="chart-live-nb">NB: 2,199</strong></span>
+              </div>
+              <span class="demand-expand-badge" title="Expand high-resolution view">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V2.707l3.146 3.147a.5.5 0 0 0 .708-.708L2.707 2H5.5a.5.5 0 0 0 0-1h-4zm13 0a.5.5 0 0 0-.5.5V5.5a.5.5 0 0 0 1 0V2.707l-3.146 3.147a.5.5 0 0 0 .708.708L14.707 2h2.793a.5.5 0 0 0 0-1h-4zm0 14a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-1 0v2.793l-3.146-3.147a.5.5 0 0 0-.708.708L13.293 14H10.5a.5.5 0 0 0 0 1h4zm-13 0a.5.5 0 0 0 .5-.5v-2.793l3.146-3.147a.5.5 0 0 0-.708-.708L2 13.293V10.5a.5.5 0 0 0-1 0v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H2.707z"/>
+                </svg>
+                EXPAND
+              </span>
             </div>
           </div>
           
