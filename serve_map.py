@@ -75,7 +75,7 @@ def main():
     if not os.path.exists(DIRECTORY):
         os.makedirs(DIRECTORY, exist_ok=True)
 
-    dashboard = "dashboard.html" if os.path.exists(os.path.join(DIRECTORY, "dashboard.html")) else "dashboard_8am_11am.html"
+    dashboard = "dashboard.html"
     url = f"http://localhost:{PORT}/{dashboard}"
     
     print("\n" + "=" * 65)

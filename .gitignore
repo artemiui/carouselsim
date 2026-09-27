@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Intermediate / legacy experiment outputs
+output/*.png
+output/*.txt
+output/dashboard_8am_11am.html
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
