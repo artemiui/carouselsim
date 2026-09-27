@@ -695,14 +695,16 @@ def main():
     /* Dynamic Overlaid Dual-Lane Status HUD over Map */
     .map-status-overlay {{
       position: absolute;
-      top: 10px;
+      bottom: 10px;
       left: 10px;
       z-index: 20;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
       gap: 6px;
       pointer-events: none;
-      max-width: calc(100% - 64px);
+      max-width: calc(100% - 20px);
     }}
     .map-status-chip {{
       display: inline-flex;
@@ -792,7 +794,7 @@ def main():
       position: relative;
       background: #FAF8F2;
       border-radius: var(--radius-md);
-      border: 1px solid var(--border-subtle);
+      border: none;
       padding: 8px;
       margin-bottom: 12px;
       min-height: 350px;
@@ -1479,14 +1481,6 @@ def main():
 
             <!-- 2. Fixed Geographic Route Map (Matching Attachment - Default View) -->
             <svg id="route-vector-svg" width="100%" height="330" viewBox="0 0 540 330">
-              <!-- Background Road Guidelines -->
-              <line x1="20" y1="50" x2="520" y2="50" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="20" y1="120" x2="520" y2="120" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="20" y1="190" x2="520" y2="190" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="120" y1="20" x2="120" y2="310" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="260" y1="20" x2="260" y2="310" stroke="#EDE8DC" stroke-width="1.5"/>
-              <line x1="400" y1="20" x2="400" y2="310" stroke="#EDE8DC" stroke-width="1.5"/>
-
               <!-- Main Route Transit Polyline -->
               <path id="route-path" d="{route_path_d}" 
                     stroke="#18181B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
